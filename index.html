@@ -1,0 +1,289 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>[R004f‑j] Admin — Auto‑Calendar + Opening Hours</title>
+<style>
+:root{--bg:#fff;--ink:#0f172a;--bd:#e5e7eb;--mut:#64748b;--brand:#0ea5e9}
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#0f172a;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial}
+.wrap{max-width:1600px;margin:0 auto;padding:16px}
+header{position:sticky;top:0;background:linear-gradient(180deg,#fff,rgba(255,255,255,.92));backdrop-filter:blur(6px);border-bottom:1px solid var(--bd);z-index:5}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.sp{flex:1}
+.btn{border:1px solid var(--bd);border-radius:10px;background:#fff;padding:8px 12px;cursor:pointer;font-weight:600}
+.btn.small{padding:6px 10px;font-size:.9rem}.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.pill{padding:4px 8px;border:1px solid var(--bd);border-radius:999px;font-size:12px;background:#fff}
+.card{background:#fff;border:1px solid var(--bd);border-radius:14px;margin:16px 0}
+.h{padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;gap:8px;align-items:center}.c{padding:16px}
+nav.tabs{display:flex;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--bd);position:sticky;top:64px;background:#fff;z-index:4}
+nav.tabs button{all:unset;padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:600;color:#475569}
+nav.tabs button.active{background:#f1f5f9;color:#0f172a}
+.section{display:none}.section.active{display:block}
+.grid{display:grid;gap:12px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}.ga{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.help{color:var(--mut);font-size:.9rem}
+.badge{border:1px solid var(--bd);border-radius:999px;padding:2px 8px;font-size:12px;background:#f1f5f9}
+.warn{background:#fff1f2;border:2px solid #fecaca;color:#7f1d1d;border-radius:12px;padding:10px;margin:8px 0}
+.info{background:#ecfeff;border:2px solid #67e8f9;color:#155e75;border-radius:12px;padding:10px;margin:8px 0}
+.small{font-size:.9rem;color:#64748b}
+.tableWrap{overflow-x:auto;width:100%}.tableWrap table{min-width:900px;border-collapse:collapse}th,td{border:1px solid var(--bd);padding:8px;text-align:left;font-size:13px}
+.kbd{font-family:ui-monospace,monospace;border:1px solid var(--bd);padding:0 6px;border-radius:6px;background:#f8fafc}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap row">
+    <strong>[R004f‑j] Admin</strong>
+    <span class="pill" id="counts">Rooms: 0 | Calendars: 0 | Fix: 0</span>
+    <div class="sp"></div>
+    <label class="btn small">Import JSON<input id="imp" type="file" accept="application/json" style="display:none"></label>
+    <button id="export" class="btn small primary">Export JSON</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="card">
+    <div class="h"><b>Admin</b><span class="pill">Auto‑Calendar + Opening Hours (copy‑to‑all) + Sync + Self‑check</span></div>
+    <div class="c">
+      <nav class="tabs">
+        <button data-tab="availability" class="active">1) Availability</button>
+        <button data-tab="fixlog">2) Fix Log</button>
+        <button data-tab="raw">3) Raw JSON</button>
+      </nav>
+
+      <div id="availability" class="section active">
+        <div class="info">
+          Every room gets a calendar in <code>state.calendars</code> automatically. Use <b>Sync calendars with rooms</b> if you imported older JSON.
+        </div>
+
+        <div class="grid g3">
+          <div><label>Room</label><select id="cal_room"></select></div>
+          <div><label>Timezone (IANA)</label><input id="tz" placeholder="Europe/Dublin"></div>
+          <div class="row"><button id="syncNow" class="btn small">Sync calendars with rooms</button><button id="copyToAll" class="btn small">Copy hours & tz to all rooms</button></div>
+        </div>
+
+        <div class="card" style="margin-top:10px">
+          <div class="h"><b>Opening hours — weekly</b><span class="help">24h clock HH:mm • leave blank to close a day • multiple ranges allowed</span></div>
+          <div class="c">
+            <div class="tableWrap">
+              <table>
+                <thead><tr><th>Day</th><th>Range 1 (start–end)</th><th>Range 2</th><th>Range 3</th><th></th></tr></thead>
+                <tbody id="ohRows"></tbody>
+              </table>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <button id="genMFTemplate" class="btn small">Mon–Fri 07:00–22:00, Sat 08:00–20:00, Sun closed</button>
+              <button id="saveHours" class="btn small primary">Save opening hours</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:10px">
+          <div class="h"><b>Self‑check</b></div>
+          <div class="c" id="selfCheck"></div>
+        </div>
+      </div>
+
+      <div id="fixlog" class="section">
+        <div class="row" style="gap:8px">
+          <input id="logTitle" placeholder="New item title…" style="max-width:420px">
+          <select id="logPriority"><option>Immediate</option><option selected>Future</option></select>
+          <button id="addLog" class="btn small">Add</button>
+        </div>
+        <div id="logList" style="margin-top:10px;display:grid;gap:10px"></div>
+      </div>
+
+      <div id="raw" class="section"><pre id="dump" style="white-space:pre-wrap"></pre></div>
+    </div>
+  </div>
+</main>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const KEY="admin_draft_v2";
+  const now=()=>new Date().toISOString();
+
+  function load(){ try{ const r=localStorage.getItem(KEY); return r? JSON.parse(r): null; }catch(e){ return null; } }
+  function save(){ localStorage.setItem(KEY, JSON.stringify(state)); renderCounts(); renderRaw(); }
+
+  const DEF_OH={ MO:[{start:"07:00",end:"22:00"}], TU:[{start:"07:00",end:"22:00"}], WE:[{start:"07:00",end:"22:00"}], TH:[{start:"07:00",end:"22:00"}], FR:[{start:"07:00",end:"22:00"}], SA:[{start:"08:00",end:"20:00"}], SU:[] };
+  const DAYS=["MO","TU","WE","TH","FR","SA","SU"];
+  const DAY_NAMES={MO:"Mon",TU:"Tue",WE:"Wed",TH:"Thu",FR:"Fri",SA:"Sat",SU:"Sun"};
+
+  let state = load() || { rooms:[], calendars:{}, pricing:{}, fixLog:[] };
+  state.calendars = state.calendars || {};
+  state.fixLog = state.fixLog || [];
+
+  function ensureCalendars(){
+    (state.rooms||[]).forEach(r=>{
+      if(!state.calendars[r.id]){
+        state.calendars[r.id] = { roomId:r.id, timezone:"Europe/Dublin", defaultPreBufferMins:0, defaultPostBufferMins:0, roundingStepMins:15, minLeadTimeMins:0, maxLeadTimeDays:365, openingHours: JSON.parse(JSON.stringify(DEF_OH)), events:[] };
+      }else{
+        const cal=state.calendars[r.id];
+        cal.roomId = cal.roomId || r.id;
+        cal.timezone = cal.timezone || "Europe/Dublin";
+        cal.openingHours = cal.openingHours || JSON.parse(JSON.stringify(DEF_OH));
+        cal.events = cal.events || [];
+      }
+    });
+  }
+  ensureCalendars();
+
+  function renderCounts(){
+    $("counts").textContent = `Rooms: ${(state.rooms||[]).length} | Calendars: ${Object.keys(state.calendars||{}).length} | Fix: ${(state.fixLog||[]).length}`;
+  }
+
+  function optionsHTML(){
+    const rs=(state.rooms||[]);
+    if(!rs.length){
+      const keys=Object.keys(state.calendars||{});
+      return keys.map(k=>`<option value="${k}">${k}</option>`).join("") || `<option value="">(no rooms)</option>`;
+    }
+    return rs.map(r=>`<option value="${r.id}">${r.name||r.id}</option>`).join("");
+  }
+
+  function renderRoomPicker(){
+    $("cal_room").innerHTML = optionsHTML();
+    const rid = state.rooms?.[0]?.id || Object.keys(state.calendars)[0] || "";
+    $("cal_room").value = rid;
+    renderCalendarEditor();
+  }
+
+  function renderOHRows(cal){
+    const tbody=$("ohRows"); tbody.innerHTML="";
+    DAYS.forEach(day=>{
+      const ranges = (cal.openingHours?.[day]||[]);
+      const tr=document.createElement("tr");
+      function cell(i){
+        const r=ranges[i]||{start:"",end:""};
+        return `<input class="oh" data-day="${day}" data-ix="${i}" data-k="start" placeholder="HH:mm" value="${r.start||""}" style="width:90px"> – <input class="oh" data-day="${day}" data-ix="${i}" data-k="end" placeholder="HH:mm" value="${r.end||""}" style="width:90px">`;
+      }
+      tr.innerHTML = `<td><b>${DAY_NAMES[day]}</b></td><td>${cell(0)}</td><td>${cell(1)}</td><td>${cell(2)}</td><td><button class="btn small" data-add="${day}">+ Range</button></td>`;
+      tbody.appendChild(tr);
+    });
+    // add handlers
+    tbody.querySelectorAll("[data-add]").forEach(btn=>{
+      btn.addEventListener("click", e=>{
+        const d=e.target.getAttribute("data-add");
+        cal.openingHours[d]=cal.openingHours[d]||[];
+        cal.openingHours[d].push({start:"",end:""});
+        renderOHRows(cal);
+      });
+    });
+    tbody.querySelectorAll(".oh").forEach(inp=>{
+      inp.addEventListener("input", e=>{
+        const day=e.target.getAttribute("data-day"); const ix=+e.target.getAttribute("data-ix"); const k=e.target.getAttribute("data-k");
+        cal.openingHours[day]=cal.openingHours[day]||[];
+        cal.openingHours[day][ix]=cal.openingHours[day][ix]||{start:"",end:""};
+        cal.openingHours[day][ix][k]=e.target.value;
+      });
+    });
+  }
+
+  function renderCalendarEditor(){
+    const rid=$("cal_room").value;
+    const cal=state.calendars[rid]; if(!cal) return;
+    $("tz").value = cal.timezone||"Europe/Dublin";
+    renderOHRows(cal);
+    renderSelfCheck();
+  }
+
+  function renderSelfCheck(){
+    const wrap=$("selfCheck"); wrap.innerHTML="";
+    const problems=[];
+    (state.rooms||[]).forEach(r=>{ if(!state.calendars[r.id]) problems.push(`Room ${r.name||r.id}: missing calendar`); });
+    Object.values(state.calendars).forEach(c=>{
+      if(!c.timezone) problems.push(`Calendar ${c.roomId}: missing timezone`);
+      const hasAny = c.openingHours && Object.values(c.openingHours).some(v=> (v||[]).length>0 && (v[0].start||"")!=="" && (v[0].end||"")!=="");
+      if(!hasAny) problems.push(`Calendar ${c.roomId}: opening hours appear empty`);
+    });
+    if(!problems.length){ wrap.innerHTML = `<div class="info">No issues found ✔</div>`; return; }
+    const list=document.createElement("ul"); list.style.marginLeft="18px";
+    problems.forEach(p=>{ const li=document.createElement("li"); li.textContent=p; list.appendChild(li); });
+    const btn=document.createElement("button"); btn.className="btn small"; btn.textContent="Repair all";
+    btn.onclick=()=>{
+      ensureCalendars();
+      Object.values(state.calendars).forEach(c=>{
+        c.timezone = c.timezone || "Europe/Dublin";
+        c.openingHours = c.openingHours || JSON.parse(JSON.stringify(DEF_OH));
+      });
+      state.fixLog.unshift({id:"FIX-"+Math.random().toString(36).slice(2,8).toUpperCase(), title:"Self‑check repair applied (calendars/tz/opening hours)", priority:"Immediate", createdAt: now()});
+      save(); renderCalendarEditor();
+    };
+    wrap.appendChild(document.createElement("div")).outerHTML = `<div class="warn"><b>Issues detected</b></div>`;
+    wrap.appendChild(list);
+    wrap.appendChild(btn);
+  }
+
+  // Actions
+  $("syncNow").onclick=()=>{
+    ensureCalendars();
+    state.fixLog.unshift({id:"FIX-"+Math.random().toString(36).slice(2,8).toUpperCase(), title:"Synced calendars with rooms", priority:"Immediate", createdAt: now()});
+    save(); renderRoomPicker();
+    alert("Calendars synced with rooms ✔");
+  };
+  $("copyToAll").onclick=()=>{
+    const rid=$("cal_room").value; const src=state.calendars[rid]; if(!src) return;
+    Object.values(state.calendars).forEach(c=>{
+      c.timezone = src.timezone || "Europe/Dublin";
+      c.openingHours = JSON.parse(JSON.stringify(src.openingHours||DEF_OH));
+    });
+    state.fixLog.unshift({id:"FIX-"+Math.random().toString(36).slice(2,8).toUpperCase(), title:`Copied tz & opening hours from ${rid} → all rooms`, priority:"Immediate", createdAt: now()});
+    save(); renderCalendarEditor(); alert("Copied to all rooms ✔");
+  };
+  $("saveHours").onclick=()=>{
+    const rid=$("cal_room").value; const cal=state.calendars[rid]; if(!cal) return;
+    cal.timezone = $("tz").value || cal.timezone || "Europe/Dublin";
+    state.fixLog.unshift({id:"FIX-"+Math.random().toString(36).slice(2,8).toUpperCase(), title:`Saved opening hours for ${rid}`, priority:"Immediate", createdAt: now()});
+    save(); alert("Opening hours saved ✔");
+  };
+
+  // Fix log
+  $("addLog").onclick=()=>{
+    const t=$("logTitle").value.trim(); if(!t) return;
+    state.fixLog.unshift({id:"FIX-"+Math.random().toString(36).slice(2,8).toUpperCase(),title:t,priority:$("logPriority").value,createdAt:now()});
+    $("logTitle").value=""; save(); renderLog();
+  };
+  function renderLog(){
+    const list=$("logList"); list.innerHTML="";
+    (state.fixLog||[]).forEach((it,ix)=>{
+      const div=document.createElement("div"); div.className="card";
+      div.innerHTML=`<div class="c row"><b>${it.title}</b><span class="pill">${it.priority}</span><div class="sp"></div><span class="small">${new Date(it.createdAt).toLocaleString()}</span></div>`;
+      list.appendChild(div);
+    });
+  }
+
+  // Tabs
+  document.querySelectorAll("nav.tabs button").forEach(btn=>{
+    btn.onclick=()=>{
+      document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.remove("active"));
+      document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(btn.getAttribute("data-tab")).classList.add("active");
+      renderRaw();
+    };
+  });
+
+  // Import/Export
+  $("imp").addEventListener("change",ev=>{
+    const f=ev.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{ try{ state=JSON.parse(r.result||"{}"); state.calendars=state.calendars||{}; state.fixLog=state.fixLog||[]; ensureCalendars(); renderAll(); save(); alert("Import complete ✔"); } catch(e){ alert("Invalid JSON"); } };
+    r.readAsText(f);
+  });
+  $("export").onclick=()=>{
+    const a=document.createElement("a");
+    const ts=new Date().toISOString().replace(/[:.]/g,'-');
+    a.download=`admin-data_R004f-j_${ts}.json`;
+    a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:"application/json"}));
+    a.click();
+  };
+
+  function renderRaw(){ $("dump").textContent=JSON.stringify(state,null,2); }
+  function renderAll(){ renderCounts(); renderRoomPicker(); renderLog(); renderRaw(); }
+  renderAll();
+})();
+</script>
+</body>
+</html>
