@@ -283,7 +283,7 @@ nav.tabs button.active{background:#f1f5f9;color:#0f172a}
   function renderRaw(){ $("dump").textContent=JSON.stringify(state,null,2); }
   function renderAll(){ renderCounts(); renderRoomPicker(); renderLog(); renderRaw(); }
   // Try to auto-load admin data when hosted (GitHub Pages/Netlify)
-fetch('admin-data_R004f-j_2025-09-08T13-27-14-770Z.json', { cache: 'no-store' })
+fetch('data/admin-data.json', { cache: 'no-store' })
   .then(r => r.ok ? r.json() : null)
   .then(data => { if (data) { state = data; } })
   .catch(e => console.warn('Auto-load admin-data.json failed; use Import JSON if needed.', e))
