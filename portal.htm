@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hotel Meetings SaaS — Project Portal</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;background:#0b1020;color:#e8ecf1}
+  header{padding:24px 16px;background:linear-gradient(135deg,#0b1020,#1c2a4a)}
+  .wrap{max-width:960px;margin:0 auto;padding:0 16px}
+  h1{margin:0 0 6px;font-size:22px} h2{margin:16px 0 8px;font-size:18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  .card{background:#131b33;border:1px solid #23325a;border-radius:14px;padding:16px}
+  .btn{display:inline-block;padding:10px 14px;border-radius:10px;background:#2a6be7;color:#fff;font-weight:600;text-decoration:none}
+  .list{background:#0f1630;border:1px solid #23325a;border-radius:12px;padding:12px;max-height:320px;overflow:auto}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  a{color:#a3d8ff}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>Hotel Meetings SaaS — Project Portal</h1>
+  <p>One page to view the live Admin UI, current data, version, latest commit, and snapshots.</p>
+</div></header>
+
+<main class="wrap">
+  <div class="grid">
+    <div class="card">
+      <h2>Live Admin Demo</h2>
+      <a class="btn" href="./" target="_blank">Open Admin UI</a>
+      <p class="mono">./</p>
+    </div>
+
+    <div class="card">
+      <h2>Current Data (JSON)</h2>
+      <a class="btn" href="data/admin-data.json" target="_blank">View admin-data.json</a>
+      <p>If this 404s, upload your latest **Export JSON** to <span class="mono">/data/admin-data.json</span>.</p>
+    </div>
+
+    <div class="card">
+      <h2>Version & Pages Status</h2>
+      <div class="list mono" id="versionBox">Loading version.txt…</div>
+      <p>Edit <span class="mono">version.txt</span> to update this.</p>
+    </div>
+
+    <div class="card">
+      <h2>Latest Commit</h2>
+      <div class="list mono" id="commitBox">Loading from GitHub…</div>
+      <p>Shows the latest commit message & time.</p>
+    </div>
+
+    <div class="card" style="grid-column:1/-1">
+      <h2>Snapshots</h2>
+      <div class="list" id="snapList">Looking for <span class="mono">/data/snapshots/</span>…</div>
+      <p>Create folders like <span class="mono">/data/snapshots/2025-09-19/admin-data.json</span>.</p>
+    </div>
+  </div>
+</main>
+
+<script>
+(async function(){
+  const owner = "Fergus3763", repo = "Meeting-Room-Inputs2";
+
+  // version.txt
+  try {
+    const r = await fetch('version.txt',{cache:'no-store'});
+    document.getElementById('versionBox').textContent = r.ok ? (await r.text()).trim() || "(empty)" : "(version.txt missing)";
+  } catch { document.getElementById('versionBox').textContent = "Could not fetch version.txt"; }
+
+  // latest commit
+  try {
+    const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=1`);
+    if(r.ok){
+      const c = (await r.json())[0];
+      const msg = c.commit.message.split("\n")[0];
+      const when = new Date(c.commit.author.date).toLocaleString();
+      document.getElementById('commitBox').textContent = `${msg} — ${c.commit.author.name} @ ${when}`;
+    } else document.getElementById('commitBox').textContent = "GitHub API error " + r.status;
+  } catch { document.getElementById('commitBox').textContent = "Failed to load commits."; }
+
+  // list snapshots
+  async function listDir(path){
+    const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`);
+    return r.ok ? await r.json() : [];
+  }
+  const box = document.getElementById('snapList');
+  try {
+    const roots = await listDir('data/snapshots');
+    if (!Array.isArray(roots) || !roots.length){ box.textContent = "No snapshots found."; return; }
+    const ul = document.createElement('ul');
+    for (const dir of roots){
+      if (dir.type !== 'dir') continue;
+      const li = document.createElement('li'); li.innerHTML = `<strong>${dir.name}</strong>`;
+      const files = await listDir(`data/snapshots/${dir.name}`);
+      if (Array.isArray(files) && files.length){
+        const inner = document.createElement('ul');
+        for (const f of files){
+          const a = document.createElement('a'); a.href = `https://${owner}.github.io/${repo}/${f.path}`;
+          a.textContent = f.name; a.target = "_blank";
+          const li2 = document.createElement('li'); li2.appendChild(a); inner.appendChild(li2);
+        }
+        li.appendChild(inner);
+      } else {
+        const p = document.createElement('div'); p.textContent = "(empty)"; li.appendChild(p);
+      }
+      ul.appendChild(li);
+    }
+    box.innerHTML = ""; box.appendChild(ul);
+  } catch { box.textContent = "Could not enumerate snapshots."; }
+})();
+</script>
+</body></html>
