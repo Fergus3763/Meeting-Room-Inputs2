@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Tranche 3H — Rooms-first + Unified Items (Cumulative)</title>
+<style>
+:root{--b:#e2e8f0;--bg:#f7fafc;--ink:#0f172a;--mut:#64748b;--pri:#2563eb}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;margin:0;background:var(--bg);color:var(--ink)}
+.container{max-width:1200px;margin:0 auto;padding:24px}
+.card{background:#fff;border:1px solid var(--b);border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:16px}
+.card-h{padding:14px 16px;border-bottom:1px solid var(--b)}
+.card-c{padding:16px}
+h1{margin:0 0 6px;font-size:20px}
+h2{margin:0 0 8px;font-size:16px}
+h3{margin:6px 0 6px}
+.small{font-size:12px;color:var(--mut)}
+label{display:block;font-size:13px;color:#334155;margin:8px 0 4px}
+input,select,textarea{width:100%;border:1px solid var(--b);border-radius:10px;padding:9px 11px;background:#fff}
+.grid{display:grid;gap:12px}
+.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:1000px){.grid-2,.grid-3{grid-template-columns:1fr}}
+.table{width:100%;border-collapse:collapse;margin-top:8px}
+.table th,.table td{border:1px solid var(--b);padding:6px 8px;font-size:12px;vertical-align:top}
+.table th{background:#f1f5f9;text-align:left}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--b);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer}
+.btn.primary{background:var(--pri);color:#fff;border-color:var(--pri)}
+.btn.ghost{background:#f8fafc}
+.btn.danger{border-color:#ef4444;color:#991b1b}
+.badge{border:1px solid var(--b);border-radius:999px;padding:4px 8px;font-size:12px;background:#fff;margin-left:6px}
+.badge.ok{border-color:#bbf7d0;background:#f0fdf4;color:#166534}
+.hr{height:1px;background:var(--b);margin:12px 0}
+.section{border:1px dashed var(--b);border-radius:12px;padding:12px;margin-top:10px}
+.item{display:grid;grid-template-columns:1fr 130px 110px;gap:10px;align-items:center;border-bottom:1px dashed var(--b);padding:6px 0}
+.item:last-child{border-bottom:none}
+.pill{padding:4px 8px;border:1px solid var(--b);border-radius:999px;font-size:12px;background:#fff}
+.right{display:flex;justify-content:flex-end;gap:12px;align-items:center}
+.incl{background:#f8fafc}
+th.sticky{position:sticky;top:0;z-index:1}
+.notice{padding:10px;border:1px solid #fde68a;background:#fffbeb;color:#92400e;border-radius:10px;margin-bottom:8px}
+.tabbar{display:flex;gap:8px;flex-wrap:wrap;padding:10px 12px;border-bottom:1px solid var(--b)}
+.tabbar .tab{padding:8px 10px;border:1px solid var(--b);border-radius:10px;background:#fff;cursor:pointer}
+.tabbar .tab.active{background:#e0ecff;border-color:#93c5fd}
+.hidden{display:none}
+.adv{display:none}
+.toggle{font-size:12px;color:#334155;cursor:pointer}
+.layout-table input[type="number"]{width:90px}
+.layout-table select{width:160px}
+.help{font-size:12px;color:#475569;background:#f8fafc;border:1px solid var(--b);border-radius:10px;padding:8px;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <div class="card-h">
+      <h1>Tranche 3H — Rooms-first + Unified Items <span class="pill">Cumulative</span></h1>
+      <div class="small">Rooms-first (name → layouts → features), then Unified Items per category (Inclusive or Add-on). Save/Load/Import/Export + Booker Preview + Closing Options.</div>
+    </div>
+    <div class="card-c actions">
+      <button class="btn" id="saveAll">Save all</button>
+      <button class="btn" id="loadAll">Load all</button>
+      <button class="btn" id="clearAll">Clear saved</button>
+      <button class="btn" id="importJSON">Import JSON</button>
+      <button class="btn primary" id="exportJSON">Export JSON</button>
+      <span id="savedBadge" class="badge">Not saved</span>
+    </div>
+    <div class="tabbar">
+      <div class="tab active" data-tab="rooms">1) Spaces/Rooms</div>
+      <div class="tab" data-tab="items">2) Categories (Unified Items)</div>
+      <div class="tab" data-tab="preview">3) Booker Preview</div>
+      <div class="tab" data-tab="copyvat">Copy & VAT</div>
+      <div class="tab" data-tab="export">Export</div>
+    </div>
+  </div>
+
+  <!-- ROOMS STEP -->
+  <div class="card tabpanel" id="tab-rooms">
+    <div class="card-h"><h2>Spaces/Rooms</h2></div>
+    <div class="card-c">
+      <div class="actions" style="margin-bottom:8px">
+        <button class="btn" id="addRoom">Add room</button>
+      </div>
+      <div id="roomsWrap"></div>
+      <div class="help">Each room starts with a <b>Room name</b>, then a <b>Layouts</b> table (Boardroom, Classroom, U-Shape, Banquet, Theatre), and a <b>Features</b> checklist. Use “Add custom layout” to extend.</div>
+    </div>
+  </div>
+
+  <!-- ITEMS STEP -->
+  <div class="card tabpanel hidden" id="tab-items">
+    <div class="card-h"><h2>Categories (Unified Items)</h2></div>
+    <div class="card-c">
+      <div class="actions" style="margin-bottom:10px">
+        <button class="btn" id="addCat">Add category</button>
+        <button class="btn" id="seedDefault">Seed default AV + F&B</button>
+        <label class="toggle"><input type="checkbox" id="showAdvanced"> Show advanced columns</label>
+      </div>
+      <div id="catWrap"></div>
+      <div id="emptyNote" class="notice" style="display:none">No categories yet. Click <b>Seed default</b> to add sample AV + F&B, or <b>Add category</b> to start from scratch.</div>
+    </div>
+  </div>
+
+  <!-- PREVIEW STEP -->
+  <div class="card tabpanel hidden" id="tab-preview">
+    <div class="card-h"><h2>Booker Flow Preview</h2></div>
+    <div class="card-c">
+      <div class="grid grid-3">
+        <div><label>Date</label><input id="qDate" type="date"></div>
+        <div><label>Start</label><input id="qStart" type="time" value="09:00"></div>
+        <div><label>End</label><input id="qEnd" type="time" value="12:00"></div>
+        <div><label>Attendees</label><input id="qAtt" type="number" value="12" min="1"></div>
+      </div>
+      <div class="hr"></div>
+      <div id="sections"></div>
+      <div class="right" style="margin-top:10px">
+        <div class="pill" id="totEx">Ex VAT: €0.00</div>
+        <div class="pill" id="totVat">VAT: €0.00</div>
+        <div class="pill" id="totInc">Inc VAT: €0.00</div>
+      </div>
+      <div class="actions" style="margin-top:10px"><button class="btn primary" id="goToCheckout">Continue</button></div>
+      <div class="hr"></div>
+      <h3 id="closingTitle" style="margin:0">Additional options you may want</h3>
+      <div id="closingUpsell"></div>
+      <div class="right" style="margin-top:10px">
+        <button class="btn primary" id="recalc">Recalculate totals</button>
+      </div>
+      <div class="hr"></div>
+      <div id="quoteOut"></div>
+    </div>
+  </div>
+
+  <!-- COPY/VAT -->
+  <div class="card tabpanel hidden" id="tab-copyvat">
+    <div class="card-h"><h2>Copy / VAT</h2></div>
+    <div class="card-c grid grid-3">
+      <div><label>Closing section title (booker)</label><input id="copyClosingTitle" value="Additional options you may want"/></div>
+      <div><label>Per-category lead (booker)</label><input id="copyClosingLead" value="You may also add:"/></div>
+      <div><label>VAT rate (%)</label><input id="vatRate" type="number" step="0.01" value="20"></div>
+    </div>
+  </div>
+
+  <!-- EXPORT -->
+  <div class="card tabpanel hidden" id="tab-export">
+    <div class="card-h"><h2>Export Payload</h2></div>
+    <div class="card-c"><pre id="preview"></pre></div>
+  </div>
+</div>
+
+<script>
+const DKEY="venue-tranche3h-cumulative";
+function $(id){return document.getElementById(id)}
+function saved(state){const b=$("savedBadge"); b.textContent=state?"Saved":"Not saved"; b.className="badge"+(state?" ok":"");}
+function autoId(p="ID"){return p+"-"+Math.random().toString(36).slice(2,8).toUpperCase();}
+const defaultUnits={per_person:"person", per_item:"each", per_room:"room", per_hour:"hour", per_day:"day"};
+const visOptions=["public","hidden","public_aggregate"];
+const priceTypes=["per_person","per_item","per_room","per_hour","per_day"];
+
+const initial = {
+  vatRate:20,
+  copy:{closingTitle:"Additional options you may want", closingLead:"You may also add:"},
+  rooms:[{
+    id:"RM-101",
+    name:"Example Room",
+    layouts:[
+      {type:"Boardroom", capacity:14, default:true},
+      {type:"Classroom", capacity:24},
+      {type:"U-Shape", capacity:18},
+      {type:"Theatre", capacity:40},
+      {type:"Banquet", capacity:30}
+    ],
+    features:{naturalLight:true, view:true, aircon:true, accessible:true, notes:""}
+  }],
+  categories:[
+    {id:"CAT-FNB", name:"Food & Beverage", sectionLabel:"F&B", sort:10, showClosingUpsell:true, items:[
+      {id:"ADD-COF", name:"Coffee & Tea (refills)", categoryId:"CAT-FNB", inclusive:false, pricingMode:"simple", priceType:"per_person", unitName:"person", priceExVAT:4.5, taxable:true, minQty:0, maxQty:0, step:1, defaultSelected:false, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:"Coffee & Tea"}
+    ]},
+    {id:"CAT-AV", name:"Audio/Visual", sectionLabel:"AV", sort:20, showClosingUpsell:true, items:[
+      {id:"ADD-PTZ", name:"PTZ Camera Kit", categoryId:"CAT-AV", inclusive:false, pricingMode:"hour_or_day", ratePerHourExVAT:60, ratePerDayExVAT:180, dayCapHours:4, roundHoursUp:true, taxable:true, minQty:0, maxQty:1, step:1, defaultSelected:false, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:"PTZ Camera Kit"}
+    ]}
+  ]
+};
+const SUGGESTIONS = {
+  "CAT-AV":[ "Lectern","Wireless handheld mic","Presenter remote","Teleprompter","Confidence monitor","Hybrid streaming kit","PTZ Camera Kit" ],
+  "CAT-FNB":[ "Coffee & Tea (refills)","Pastries selection","Bottled mineral water","Working lunch (sandwiches)","Gluten-free snacks" ]
+};
+
+const data = JSON.parse(JSON.stringify(initial));
+
+/* tabs */
+document.querySelectorAll(".tabbar .tab").forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll(".tabbar .tab").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    const name=t.getAttribute("data-tab");
+    document.querySelectorAll(".tabpanel").forEach(p=>p.classList.add("hidden"));
+    $("tab-"+name).classList.remove("hidden");
+    if(name==="preview"){ buildSections(); calcTotalsLive(); }
+    if(name==="export"){ updatePreview(); }
+  };
+});
+
+/* ROOMS */
+function renderRooms(){
+  const wrap=$("roomsWrap"); wrap.innerHTML="";
+  data.rooms.forEach((rm, idx)=>{
+    const card=document.createElement("div"); card.className="section";
+    const top=document.createElement("div"); top.className="grid grid-3";
+    card.append(top);
+
+    top.append(field("Room name", rm.name, v=>rm.name=v));
+    top.append(check("Natural light", rm.features?.naturalLight, v=>setF(rm,"naturalLight",v)));
+    top.append(check("View", rm.features?.view, v=>setF(rm,"view",v)));
+    top.append(check("Air conditioning", rm.features?.aircon, v=>setF(rm,"aircon",v)));
+    top.append(check("Accessible", rm.features?.accessible, v=>setF(rm,"accessible",v)));
+    top.append(area("Notes", rm.features?.notes||"", v=>setF(rm,"notes",v)));
+
+    const lt=document.createElement("table"); lt.className="table layout-table";
+    lt.innerHTML = `<thead><tr><th>Default</th><th>Layout type</th><th>Capacity</th><th></th></tr></thead><tbody></tbody>`;
+    const tb=lt.querySelector("tbody");
+    (rm.layouts=rm.layouts||[]).forEach((row,ri)=>{
+      const tr=document.createElement("tr");
+      const d=document.createElement("input"); d.type="radio"; d.name="def-"+rm.id; d.checked=!!row.default; d.onchange=()=>{ rm.layouts.forEach(x=>x.default=false); row.default=true; updatePreview(); };
+      const s=document.createElement("select"); ["Boardroom","Classroom","U-Shape","Banquet","Theatre","Custom"].forEach(o=> s.append(new Option(o,o))); s.value=row.type||"Boardroom"; s.onchange=()=>{ row.type=s.value; updatePreview(); };
+      const c=document.createElement("input"); c.type="number"; c.min=0; c.value=row.capacity||0; c.oninput=()=>{ row.capacity=Number(c.value||0); updatePreview(); };
+      const del=document.createElement("button"); del.className="btn danger"; del.textContent="Delete"; del.onclick=()=>{ rm.layouts.splice(ri,1); renderRooms(); updatePreview(); };
+      [td(d),td(s),td(c),td(del)].forEach(x=>tr.append(x)); tb.append(tr);
+    });
+    const add=document.createElement("button"); add.className="btn"; add.textContent="Add custom layout"; add.onclick=()=>{
+      (rm.layouts=rm.layouts||[]).push({type:"Custom", capacity:0, default: rm.layouts?.length? false:true});
+      renderRooms(); updatePreview();
+    };
+    card.append(lt, add);
+
+    const actions=document.createElement("div"); actions.className="actions"; const delR=document.createElement("button"); delR.className="btn danger"; delR.textContent="Delete room";
+    delR.onclick=()=>{ if(confirm("Delete this room?")){ data.rooms.splice(idx,1); renderRooms(); updatePreview(); } };
+    actions.append(delR); card.append(actions);
+    wrap.append(card);
+  });
+  if(!data.rooms.length){
+    const n=document.createElement("div"); n.className="notice"; n.textContent="No rooms yet. Click “Add room” to begin.";
+    wrap.append(n);
+  }
+}
+function setF(rm,key,val){ rm.features=rm.features||{}; rm.features[key]=val; updatePreview(); }
+function field(label,val,cb){ const w=document.createElement("div"); w.innerHTML=`<label>${label}</label>`; const i=document.createElement("input"); i.value=val||""; i.oninput=()=>{ cb(i.value); updatePreview();}; w.append(i); return w;}
+function area(label,val,cb){ const w=document.createElement("div"); w.className="grid-2"; w.innerHTML=`<label>${label}</label>`; const i=document.createElement("textarea"); i.value=val||""; i.oninput=()=>{ cb(i.value); updatePreview();}; w.append(i); return w;}
+function check(label,val,cb){ const w=document.createElement("div"); w.innerHTML=`<label><input type="checkbox" ${val?"checked":""}/> ${label}</label>`; const i=w.querySelector("input"); i.onchange=()=>{ cb(i.checked); }; return w;}
+function td(n){ const d=document.createElement("td"); d.append(n); return d; }
+
+/* ITEMS */
+const SUGG = SUGGESTIONS;
+function isAV(cat){ const s=(cat.sectionLabel||cat.name||"").toLowerCase(); return s.includes("av")||s.includes("audio")||s.includes("visual"); }
+function renderCategories(){
+  const wrap=$("catWrap"); const note=$("emptyNote");
+  wrap.innerHTML="";
+  const cats=[...data.categories];
+  note.style.display = cats.length ? "none" : "block";
+  const advOn = $("showAdvanced").checked;
+
+  cats.sort((a,b)=>(a.sort||0)-(b.sort||0)).forEach((cat, idx)=>{
+    const card=document.createElement("div"); card.className="section";
+
+    const head=document.createElement("div"); head.className="actions";
+    head.innerHTML = `<div><strong>${cat.sectionLabel||cat.name}</strong> <span class="pill">ID ${cat.id}</span></div>`;
+    const del=document.createElement("button"); del.className="btn danger"; del.textContent="Delete category";
+    del.onclick=()=>{ if(confirm("Delete this category?")){ data.categories.splice(idx,1); renderCategories(); buildSections(); updatePreview(); } };
+    const save=document.createElement("button"); save.className="btn"; save.textContent="Save this category";
+    save.onclick=()=>{ localStorage.setItem(DKEY, JSON.stringify(data)); saved(true); alert("Category saved."); };
+    head.append(del, save);
+    card.append(head);
+
+    const basics=document.createElement("div"); basics.className="grid grid-3";
+    basics.append(field("Name", cat.name, v=>cat.name=v),
+                  field("Booker label", cat.sectionLabel, v=>cat.sectionLabel=v));
+    card.append(basics);
+
+    const sug=document.createElement("div"); sug.className="small"; sug.innerHTML="<strong>Suggestions</strong>: click to add";
+    const chips=document.createElement("div"); chips.className="actions";
+    (SUGG[cat.id]||[]).forEach(name=>{
+      if((cat.items||[]).some(i=> (i.name||'').toLowerCase()===name.toLowerCase())) return;
+      const b=document.createElement("button"); b.className="btn"; b.textContent=name;
+      b.onclick=()=>{ (cat.items=cat.items||[]).push(makeTemplate(name,cat.id)); renderCategories(); buildSections(); updatePreview(); };
+      chips.append(b);
+    });
+    card.append(sug, chips);
+
+    const table=document.createElement("table"); table.className="table";
+    table.innerHTML = `<thead><tr>
+      <th class="sticky">Inclusive</th><th class="sticky">Name</th><th class="sticky">Mode</th>
+      <th class="sticky">Price type</th><th class="sticky">Unit</th><th class="sticky">Price ex VAT</th>
+      <th class="sticky ${advOn?'':'adv'}">Rate/hr</th><th class="sticky ${advOn?'':'adv'}">Rate/day</th><th class="sticky ${advOn?'':'adv'}">Cap(h)</th><th class="sticky ${advOn?'':'adv'}">Round up</th>
+      <th class="sticky ${advOn?'':'adv'}">Taxable</th><th class="sticky ${advOn?'':'adv'}">Min</th><th class="sticky ${advOn?'':'adv'}">Max</th><th class="sticky ${advOn?'':'adv'}">Step</th>
+      <th class="sticky">Default?</th><th class="sticky">Show main</th><th class="sticky">Offer close</th><th class="sticky ${advOn?'':'adv'}">Visibility</th><th class="sticky">Public label</th><th></th>
+    </tr></thead><tbody></tbody>`;
+    const tb=table.querySelector("tbody");
+
+    (cat.items=cat.items||[]).forEach((row,ri)=>{
+      const tr=document.createElement("tr");
+      function inp(val, cb, type="text"){ const i=document.createElement("input"); if(type==="number"){i.type="number"; i.step="0.01"}; i.value=val??""; i.oninput=()=>{ cb(type==="number"? Number(i.value||0): i.value); updatePreview();}; return i; }
+      function bool(val, cb){ const i=document.createElement("input"); i.type="checkbox"; i.checked=!!val; i.onchange=()=>{ cb(i.checked); updatePreview();}; return i; }
+      function sel(val, opts, cb){ const s=document.createElement("select"); opts.forEach(o=>s.append(new Option(o,o))); s.value=val||opts[0]; s.onchange=()=>{ cb(s.value); updatePreview();}; return s; }
+
+      const incl=bool(row.inclusive, v=>{ row.inclusive=v; refresh(); });
+      const name=inp(row.name, v=>row.name=v);
+      const mode=sel(row.pricingMode|| (isAV(cat)?"hour_or_day":"simple"), ["simple","hour_or_day"], v=>{ row.pricingMode=v; refresh(); });
+
+      const priceTypeSel=sel(row.priceType||"per_item", priceTypes, v=>{ row.priceType=v; if(!row.unitName || ["person","each","room","hour","day"].includes(row.unitName)) { row.unitName = defaultUnits[v]||row.unitName; unit.value=row.unitName; } refresh(); });
+      const unit=inp(row.unitName||defaultUnits[row.priceType]||"", v=>row.unitName=v);
+      const amount=inp(row.priceExVAT||0, v=>row.priceExVAT=v, "number");
+
+      const rHr=inp(row.ratePerHourExVAT||0, v=>row.ratePerHourExVAT=v, "number");
+      const rDay=inp(row.ratePerDayExVAT||0, v=>row.ratePerDayExVAT=v, "number");
+      const cap=inp(row.dayCapHours||8, v=>row.dayCapHours=v, "number");
+      const round=bool(row.roundHoursUp!==false, v=>row.roundHoursUp=v);
+
+      const tax=bool(row.taxable!==false, v=>row.taxable=v);
+      const min=inp(row.minQty||0, v=>row.minQty=v, "number");
+      const max=inp(row.maxQty||0, v=>row.maxQty=v, "number");
+      const step=inp(row.step||1, v=>row.step=v, "number");
+      const def=bool(row.defaultSelected, v=>row.defaultSelected=v);
+
+      const showMain=bool(row.showInMain!==false, v=>row.showInMain=v);
+      const offer=bool(row.offerAtClosing!==false, v=>row.offerAtClosing=v);
+      const visSel=sel(row.visibility||"public", visOptions, v=>row.visibility=v);
+      const pub=inp(row.publicLabel||"", v=>row.publicLabel=v);
+
+      const del=document.createElement("button"); del.className="btn danger"; del.textContent="Delete"; del.onclick=()=>{ cat.items.splice(ri,1); renderCategories(); buildSections(); updatePreview(); };
+
+      function td(n){ const d=document.createElement("td"); d.append(n); return d; }
+      function refresh(){
+        const isIncl = !!row.inclusive;
+        const isHourDay = (row.pricingMode==="hour_or_day");
+        [mode, priceTypeSel, unit, amount, rHr, rDay, cap, round, tax, min, max, step, def].forEach(el=> el.disabled = isIncl);
+        if(!isIncl){
+          [priceTypeSel, unit, amount].forEach(el=> el.disabled = isHourDay);
+          [rHr, rDay, cap, round].forEach(el=> el.disabled = !isHourDay);
+          [min, max, step, def, tax].forEach(el=> el.disabled = false);
+        }
+        tr.className = isIncl ? "incl" : "";
+      }
+
+      tr.append(td(incl), td(name), td(mode),
+               td(priceTypeSel), td(unit), td(amount),
+               td(rHr), td(rDay), td(cap), td(round),
+               td(tax), td(min), td(max), td(step),
+               td(def), td(showMain), td(offer), td(visSel), td(pub), td(del));
+      if(!$("showAdvanced").checked){ [rHr, rDay, cap, round, tax, min, max, step, visSel].forEach(el=> el.parentElement.classList.add("adv")); }
+      tb.append(tr);
+      refresh();
+    });
+
+    const addBtn=document.createElement("button"); addBtn.className="btn"; addBtn.textContent="Add item";
+    addBtn.onclick=()=>{ cat.items.push({id:autoId("ITM"), name:"", categoryId:cat.id, inclusive:false, pricingMode:(isAV(cat)?"hour_or_day":"simple"), priceType:"per_item", unitName:"each", priceExVAT:0, ratePerHourExVAT:0, ratePerDayExVAT:0, dayCapHours:8, roundHoursUp:true, taxable:true, minQty:0, maxQty:0, step:1, defaultSelected:false, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:""}); renderCategories(); buildSections(); updatePreview(); };
+    card.append(table, addBtn);
+    wrap.append(card);
+  });
+}
+
+function makeTemplate(name, catId){
+  const lower=name.toLowerCase();
+  if(lower.includes("teleprompter")||lower.includes("streaming")||lower.includes("ptz")||lower.includes("monitor")){
+    return {id:autoId("ITM"), name, categoryId:catId, inclusive:false, pricingMode:"hour_or_day",
+      ratePerHourExVAT:0, ratePerDayExVAT:0, dayCapHours:8, roundHoursUp:true,
+      taxable:true, minQty:0, maxQty:0, step:1, defaultSelected:false, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:name };
+  }
+  return {id:autoId("ITM"), name, categoryId:catId, inclusive:false, pricingMode:"simple", priceType:"per_item", unitName:"each", priceExVAT:0,
+    taxable:true, minQty:0, maxQty:0, step:1, defaultSelected:false, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:name };
+}
+
+/* preview */
+function toMinVal(t){ if(!t) return 0; const [h,m]=t.split(":").map(Number); return h*60+(m||0); }
+function collectSelected(){
+  const sel=[]; data.categories.forEach(cat=> (cat.items||[]).forEach(x=>{
+    if(x.inclusive) return;
+    const el=document.getElementById("sel-"+x.id); if(!el) return;
+    const v=Number(el.value||0); if(v>0) sel.push({...x, qty:v});
+  }));
+  return sel;
+}
+function buildSections(){
+  const wrap=$("sections"); wrap.innerHTML="";
+  const cats=[...data.categories].sort((a,b)=>(a.sort||0)-(b.sort||0));
+  cats.forEach(cat=>{
+    const sec=document.createElement("div"); sec.className="section";
+    const h=document.createElement("h3"); h.textContent=(cat.sectionLabel||cat.name); sec.append(h);
+    const included = (cat.items||[]).filter(i=>i.inclusive && i.visibility!=="hidden");
+    if(included.length){
+      const list=document.createElement("ul"); list.className="small";
+      included.forEach(function(i){ const li=document.createElement("li"); li.textContent=(i.publicLabel||i.name||i.id)+" — Included"; list.append(li); });
+      sec.append(list);
+    }
+    const bookables=(cat.items||[]).filter(i=> !i.inclusive && i.showInMain!==false && i.visibility!=="hidden");
+    if(bookables.length){
+      bookables.forEach(x=>{
+        const row=document.createElement("div"); row.className="item";
+        const modeText = (x.pricingMode==="hour_or_day") ? "hour/day" : (x.priceType||"");
+        const label=document.createElement("div"); label.innerHTML="<strong>"+(x.publicLabel||x.name||x.id)+"</strong> <span class='small'>("+modeText+")</span>";
+        const qty=document.createElement("input"); qty.type="number"; qty.step=x.step||1; qty.min=x.minQty||0; qty.max=x.maxQty||99999; qty.value = x.defaultSelected ? Math.max((x.minQty||0),(x.step||1)) : 0; qty.id="sel-"+x.id; qty.oninput=calcTotalsLive;
+        const price=document.createElement("div"); price.className="small";
+        if(x.pricingMode==="hour_or_day"){
+          price.textContent = "€"+(x.ratePerHourExVAT||0)+"/hour or €"+(x.ratePerDayExVAT||0)+"/day (cap "+(x.dayCapHours||8)+"h)";
+        }else{
+          price.textContent = "€"+(x.priceExVAT||0)+" / "+(x.unitName||"unit");
+        }
+        row.append(label, qty, price); sec.append(row);
+      });
+    }
+    if(!included.length && !bookables.length){
+      const em=document.createElement("div"); em.className="small"; em.textContent="No items in this category."; sec.append(em);
+    }
+    wrap.append(sec);
+  });
+}
+function priceLines(arr){
+  const start=$("qStart").value||"09:00", end=$("qEnd").value||"10:00"; let hours=Math.max(1,(toMinVal(end)-toMinVal(start))/60);
+  const attendees=Number($("qAtt").value||0);
+  const lines=[];
+  (arr||[]).forEach(x=>{
+    let qty=x.qty||0; if(qty<=0) return;
+    let ex=0, basis="", unitPriceDisp=0, unitNameDisp=x.unitName||"";
+    if(x.pricingMode==="hour_or_day"){
+      let h=hours; if(x.roundHoursUp!==false){ h=Math.ceil(h); }
+      const cap=Number(x.dayCapHours||8), hr=Number(x.ratePerHourExVAT||0), dr=Number(x.ratePerDayExVAT||0);
+      if(h>=cap && dr>0){ ex=dr*qty; basis="day rate"; unitPriceDisp=dr; unitNameDisp="day"; }
+      else{ ex=hr*h*qty; basis="hourly × "+h+"h"; unitPriceDisp=hr; unitNameDisp="hour"; }
+    }else{
+      const unit=x.priceExVAT||0; let mult=1;
+      if(x.priceType==="per_person") mult = attendees*qty;
+      else if(x.priceType==="per_item") mult = qty;
+      else if(x.priceType==="per_room") mult = qty;
+      else if(x.priceType==="per_hour") mult = Math.max(1,hours)*qty;
+      else if(x.priceType==="per_day") mult = qty;
+      ex = unit*mult; basis=x.priceType||""; unitPriceDisp=unit;
+    }
+    const vat = (x.taxable!==false? (ex * (Number(data.vatRate||0)/100)) : 0);
+    lines.append({label:x.publicLabel||x.name||x.id, qty, unitName:unitNameDisp, unitPrice:unitPriceDisp, basis, exVAT:ex, vat, incVAT: ex+vat});
+  });
+  return lines;
+}
+function sumTotals(lines){ return lines.reduce((a,l)=>({ex:a.ex+l.exVAT, vat:a.vat+l.vat, inc:a.inc+l.incVAT}), {ex:0, vat:0, inc:0}); }
+function calcTotalsLive(){ const lines=priceLines(collectSelected()); const t=sumTotals(lines); $("totEx").textContent="Ex VAT: €"+t.ex.toFixed(2); $("totVat").textContent="VAT: €"+t.vat.toFixed(2); $("totInc").textContent="Inc VAT: €"+t.inc.toFixed(2); }
+document.getElementById("qDate").oninput=calcTotalsLive;
+document.getElementById("qStart").oninput=calcTotalsLive;
+document.getElementById("qEnd").oninput=calcTotalsLive;
+document.getElementById("qAtt").oninput=calcTotalsLive;
+
+function goToCheckout(){
+  const selected=collectSelected(); const ids=new Set(selected.map(s=>s.id));
+  const closing=$("closingUpsell"); closing.innerHTML="";
+  const cats=[...data.categories].sort((a,b)=>(a.sort||0)-(b.sort||0));
+  cats.forEach(cat=>{
+    if(!cat.showClosingUpsell) return;
+    const ups=(cat.items||[]).filter(x=> !x.inclusive && x.visibility!=="hidden" && x.offerAtClosing!==false && !ids.has(x.id));
+    if(!ups.length) return;
+    const sec=document.createElement("div"); sec.className="section";
+    const h=document.createElement("h4"); h.textContent=(cat.sectionLabel||cat.name)+" — "+(data.copy?.closingLead || "You may also add:"); sec.append(h);
+    ups.forEach(x=>{
+      const row=document.createElement("div"); row.className="item";
+      const label=document.createElement("div"); label.innerHTML="<strong>"+(x.publicLabel||x.name||x.id)+"</strong>";
+      const qty=document.createElement("input"); qty.type="number"; qty.step=x.step||1; qty.min=x.minQty||0; qty.max=x.maxQty||99999; qty.value=0; qty.id="ups-"+x.id;
+      const price=document.createElement("div"); price.className="small";
+      if(x.pricingMode==="hour_or_day"){ price.textContent="€"+(x.ratePerHourExVAT||0)+"/hour or €"+(x.ratePerDayExVAT||0)+"/day (cap "+(x.dayCapHours||8)+"h)"; }
+      else{ price.textContent="€"+(x.priceExVAT||0)+" / "+(x.unitName||"unit"); }
+      row.append(label, qty, price); sec.append(row);
+    });
+    closing.append(sec);
+  });
+  renderQuote(selected);
+  $("closingTitle").textContent = data.copy?.closingTitle || "Additional options you may want";
+}
+document.getElementById("goToCheckout").onclick=goToCheckout;
+document.getElementById("recalc").onclick=()=>{
+  const selected=collectSelected();
+  data.categories.forEach(cat=> (cat.items||[]).forEach(x=>{
+    const el=document.getElementById("ups-"+x.id); if(el){ const v=Number(el.value||0); if(v>0) selected.push({...x, qty:v}); }
+  }));
+  renderQuote(selected); const t=sumTotals(priceLines(selected));
+  $("totEx").textContent="Ex VAT: €"+t.ex.toFixed(2); $("totVat").textContent="VAT: €"+t.vat.toFixed(2); $("totInc").textContent="Inc VAT: €"+t.inc.toFixed(2);
+};
+
+function renderQuote(selected){
+  const lines=priceLines(selected);
+  const t=sumTotals(lines);
+  const out=$("quoteOut");
+  const rows=lines.map(l=> `<tr><td>${l.label}</td><td>${l.qty}</td><td>${l.unitName}</td><td>${l.basis}</td><td>€${Number(l.unitPrice).toFixed(2)}</td><td>€${l.exVAT.toFixed(2)}</td><td>€${l.vat.toFixed(2)}</td><td>€${l.incVAT.toFixed(2)}</td></tr>`).join("");
+  out.innerHTML=`
+    <h3>Summary (before final review)</h3>
+    <table class="table"><thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Basis</th><th>Unit Rate</th><th>Ex VAT</th><th>VAT</th><th>Inc VAT</th></tr></thead>
+    <tbody>${rows || "<tr><td colspan='8' class='small'>No add-ons selected.</td></tr>"}</tbody></table>
+    <div class="right" style="margin-top:8px">
+      <div class="pill">Ex VAT: €${t.ex.toFixed(2)}</div>
+      <div class="pill">VAT: €${t.vat.toFixed(2)}</div>
+      <div class="pill">Inc VAT: €${t.inc.toFixed(2)}</div>
+    </div>`;
+}
+
+/* copy/vat */
+function syncCopyVAT(){ data.copy={closingTitle:$("copyClosingTitle").value||"", closingLead:$("copyClosingLead").value||""}; data.vatRate=Number($("vatRate").value||0); }
+$("copyClosingTitle").oninput=()=>{ syncCopyVAT(); buildSections(); updatePreview(); };
+$("copyClosingLead").oninput=()=>{ syncCopyVAT(); buildSections(); updatePreview(); };
+$("vatRate").oninput=()=>{ syncCopyVAT(); calcTotalsLive(); updatePreview(); };
+
+/* save/load/import/export */
+document.getElementById("saveAll").onclick=()=>{ localStorage.setItem(DKEY, JSON.stringify(data)); saved(true); alert("Saved."); };
+document.getElementById("loadAll").onclick=()=>{ const raw=localStorage.getItem(DKEY); if(!raw) return alert("No draft found"); const obj=JSON.parse(raw); Object.keys(data).forEach(k=>delete data[k]); Object.assign(data,obj); init(); saved(true); alert("Draft loaded."); };
+document.getElementById("clearAll").onclick=()=>{ localStorage.removeItem(DKEY); saved(false); alert("Cleared. If UI looked empty earlier, this usually fixes it."); };
+document.getElementById("importJSON").onclick=()=>{ const f=document.createElement("input"); f.type="file"; f.accept="application/json"; f.onchange=async()=>{ const t=await f.files[0].text(); const obj=JSON.parse(t); Object.keys(data).forEach(k=>delete data[k]); Object.assign(data,obj); init(); saved(true); }; f.click(); };
+document.getElementById("exportJSON").onclick=()=>{ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="venue-tranche3h-cumulative.json"; a.click(); URL.revokeObjectURL(url); };
+
+/* categories */
+document.getElementById("addCat").onclick=()=>{
+  const id=prompt("New category ID (e.g., CAT-STAFF)","CAT-"+autoId().split("-")[1]);
+  if(!id) return;
+  const name=prompt("Category name (booker sees)","New Category");
+  const label=prompt("Booker label (short)","New");
+  data.categories.push({id, name:name||id, sectionLabel:label||name||id, sort:(data.categories.length+1)*10, showClosingUpsell:true, items:[]});
+  renderCategories(); buildSections(); updatePreview();
+};
+document.getElementById("seedDefault").onclick=()=>{
+  const ids=new Set(data.categories.map(c=>c.id));
+  const def=[
+    {id:"CAT-FNB", name:"Food & Beverage", sectionLabel:"F&B", sort:10, showClosingUpsell:true, items:[
+      {id:autoId("ITM"), name:"Coffee & Tea (refills)", categoryId:"CAT-FNB", inclusive:false, pricingMode:"simple", priceType:"per_person", unitName:"person", priceExVAT:4.5, taxable:true, minQty:0, maxQty:0, step:1, defaultSelected:false, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:"Coffee & Tea"},
+      {id	autoId("ITM"), name:"Pastries selection", categoryId:"CAT-FNB", inclusive:false, pricingMode:"simple", priceType:"per_person", unitName:"person", priceExVAT:3.5, taxable:true, step:1, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:"Pastries selection"},
+      {id:autoId("ITM"), name:"Bottled mineral water", categoryId:"CAT-FNB", inclusive:false, pricingMode:"simple", priceType:"per_item", unitName:"bottle", priceExVAT:2.0, taxable:true, step:1, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:"Bottled water"},
+      {id:autoId("ITM"), name:"Working lunch (sandwiches)", categoryId:"CAT-FNB", inclusive:false, pricingMode:"simple", priceType:"per_person", unitName:"person", priceExVAT:12.0, taxable:true, step:1, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:"Working lunch"},
+      {id:autoId("ITM"), name:"Gluten-free snacks", categoryId:"CAT-FNB", inclusive:false, pricingMode:"simple", priceType:"per_person", unitName:"person", priceExVAT:4.0, taxable:true, step:1, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:"GF snacks"}
+    ]},
+    {id:"CAT-AV", name:"Audio/Visual", sectionLabel:"AV", sort:20, showClosingUpsell:true, items:[
+      {id:autoId("ITM"), name:"Lectern", categoryId:"CAT-AV", inclusive:false, pricingMode:"simple", priceType:"per_item", unitName:"each", priceExVAT:15, taxable:true, step:1, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:"Lectern"},
+      {id:autoId("ITM"), name:"Wireless handheld mic", categoryId:"CAT-AV", inclusive:false, pricingMode:"simple", priceType:"per_item", unitName:"each", priceExVAT:25, taxable:true, step:1, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:"Wireless mic"},
+      {id:autoId("ITM"), name:"Presenter remote", categoryId:"CAT-AV", inclusive:false, pricingMode:"simple", priceType:"per_item", unitName:"each", priceExVAT:10, taxable:true, step:1, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:"Presenter remote"},
+      {id:autoId("ITM"), name:"Teleprompter", categoryId:"CAT-AV", inclusive:false, pricingMode:"hour_or_day", ratePerHourExVAT:70, ratePerDayExVAT:220, dayCapHours:4, roundHoursUp:true, taxable:true, step:1, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:"Teleprompter"},
+      {id:autoId("ITM"), name:"Confidence monitor", categoryId:"CAT-AV", inclusive:false, pricingMode:"hour_or_day", ratePerHourExVAT:50, ratePerDayExVAT:160, dayCapHours:4, roundHoursUp:true, taxable:true, step:1, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:"Confidence monitor"},
+      {id:autoId("ITM"), name:"Hybrid streaming kit", categoryId:"CAT-AV", inclusive:false, pricingMode:"hour_or_day", ratePerHourExVAT:90, ratePerDayExVAT:300, dayCapHours:4, roundHoursUp:true, taxable:true, step:1, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:"Hybrid streaming kit"},
+      {id:autoId("ITM"), name:"PTZ Camera Kit", categoryId:"CAT-AV", inclusive:false, pricingMode:"hour_or_day", ratePerHourExVAT:60, ratePerDayExVAT:180, dayCapHours:4, roundHoursUp:true, taxable:true, step:1, showInMain:true, offerAtClosing:true, visibility:"public", publicLabel:"PTZ Camera Kit"}
+    ]}
+  ];
+  def.forEach(c=>{ if(!ids.has(c.id)) data.categories.push(c); });
+  renderCategories(); buildSections(); updatePreview();
+};
+
+/* init */
+function updatePreview(){ $("preview").textContent = JSON.stringify(data,null,2); saved(false); }
+$("showAdvanced").onchange=()=> renderCategories();
+
+function init(){
+  renderRooms();
+  renderCategories();
+  buildSections();
+  updatePreview();
+  calcTotalsLive();
+}
+init();
+</script>
+</body>
+</html>
