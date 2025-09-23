@@ -1,0 +1,301 @@
+<!doctype html>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Reissue build — Rooms-first + Unified Items + Pricing Setup (Admin)</title>
+<style>
+  :root{--bg:#f7fafc;--ink:#0f172a;--card:#fff;--bd:#e2e8f0;--mut:#64748b;--pri:#2563eb}
+  html,body{height:100%}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,Segoe UI,Roboto,Arial}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.04);margin-bottom:16px}
+  .card-h{padding:12px 16px;border-bottom:1px solid var(--bd)}
+  .card-c{padding:16px}
+  h1{margin:0 0 4px;font-size:20px}
+  .small{color:var(--mut);font-size:12px}
+  .btn{border:1px solid var(--bd);border-radius:10px;background:#fff;padding:8px 12px;cursor:pointer}
+  .btn.primary{background:var(--pri);color:#fff;border-color:#var(--pri)}
+  .tabbar{display:flex;gap:8px;flex-wrap:wrap;padding:12px;border-bottom:1px solid var(--bd)}
+  .tab{padding:8px 10px;border:1px solid var(--bd);border-radius:10px;background:#fff;cursor:pointer}
+  .tab.active{background:#e0ecff;border-color:#93c5fd}
+  .hidden{display:none}
+  .section{border:1px dashed var(--bd);border-radius:12px;padding:12px;margin-top:10px}
+  .grid{display:grid;gap:12px}
+  .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  @media(max-width:1000px){.grid-3,.grid-4{grid-template-columns:1fr}}
+  .table{width:100%;border-collapse:collapse;margin-top:8px}
+  .table th,.table td{border:1px solid var(--bd);padding:6px 8px;font-size:12px}
+  .badge{border:1px solid var(--bd);border-radius:999px;padding:4px 8px;background:#fff;font-size:12px;margin-left:6px}
+  .pill{padding:4px 8px;border:1px solid var(--bd);border-radius:999px;font-size:12px;background:#fff}
+  .right{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+  input,select,textarea{width:100%;box-sizing:border-box;padding:8px;border:1px solid var(--bd);border-radius:10px;background:#fff}
+</style>
+<div class="wrap">
+  <div class="card">
+    <div class="card-h">
+      <h1>Reissue build — Rooms-first + Unified Items + <span class="pill">Pricing Setup (Admin)</span></h1>
+      <div class="small">Use Import/Export JSON to move data. This is a standalone admin app for Netlify.</div>
+    </div>
+    <div class="card-c">
+      <div class="tabbar">
+        <div class="tab active" data-tab="rooms">1) Spaces/Rooms</div>
+        <div class="tab" data-tab="items">2) Categories</div>
+        <div class="tab" data-tab="pricing">3) Pricing Setup</div>
+        <div class="tab" data-tab="preview">4) Booker Preview</div>
+        <div class="tab" data-tab="export">Export</div>
+      </div>
+      <div class="right" style="margin:10px 0">
+        <button class="btn" id="loadAll">Load</button>
+        <button class="btn" id="clearAll">Clear</button>
+        <button class="btn" id="importJSON">Import JSON</button>
+        <button class="btn primary" id="exportJSON">Export JSON</button>
+        <span id="saved" class="badge">Draft: empty</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="rooms"><div class="card-h"><b>Spaces/Rooms</b></div>
+  <div class="card-c">
+    <div class="section"><div class="grid grid-4" id="roomsWrap"></div>
+    <button class="btn" id="addRoom">Add room</button></div>
+  </div></div>
+
+  <div class="card hidden" id="items"><div class="card-h"><b>Categories</b></div>
+  <div class="card-c">
+    <div class="section"><button class="btn" id="addCat">Add category</button> <button class="btn" id="seed">Seed AV + F&B</button></div>
+    <div id="catWrap"></div>
+  </div></div>
+
+  <div class="card hidden" id="pricing"><div class="card-h"><b>Pricing Setup</b></div>
+  <div class="card-c">
+    <div class="section grid grid-4">
+      <div><label>Currency</label><input id="cur" value="EUR"></div>
+      <div><label>VAT defaults (JSON)</label><textarea id="vat" rows="2">{ "room":0,"fnb":23,"av":23,"staff":23 }</textarea></div>
+      <div><label>Service charge %</label><input id="svc" type="number" step="0.01" value="0"></div>
+      <div><label>Rounding step</label><input id="rnd" type="number" step="0.01" value="0.01"></div>
+    </div>
+    <div class="section"><b>Fees</b>
+      <div class="grid grid-4">
+        <div><label>Deposit %</label><input id="dep" type="number" step="0.01" value="25"></div>
+        <div><label>Out-of-hours %</label><input id="ooh" type="number" step="0.01" value="0"></div>
+      </div>
+    </div>
+    <div class="section"><b>Labour roles</b> <button class="btn" id="addRole">Add role</button>
+      <div id="rolesWrap"></div>
+    </div>
+  </div></div>
+
+  <div class="card hidden" id="preview"><div class="card-h"><b>Booker Preview</b></div>
+  <div class="card-c">
+    <div class="grid grid-3">
+      <div><label>Date</label><input type="date" id="pDate"></div>
+      <div><label>Start</label><input type="time" id="pStart" value="09:00"></div>
+      <div><label>End</label><input type="time" id="pEnd" value="12:00"></div>
+      <div><label>Attendees</label><input type="number" id="pAtt" value="10" min="1"></div>
+    </div>
+    <div id="sections" style="margin-top:10px"></div>
+    <div class="right" style="margin-top:10px">
+      <div class="pill" id="ex">Ex VAT: €0.00</div>
+      <div class="pill" id="vatT">VAT: €0.00</div>
+      <div class="pill" id="inc">Inc VAT: €0.00</div>
+    </div>
+  </div></div>
+
+  <div class="card hidden" id="export"><div class="card-h"><b>Export</b></div>
+  <div class="card-c"><pre id="out"></pre></div></div>
+</div>
+
+<script>
+const KEY="reissue-admin-pricing-v4";
+const $=id=>document.getElementById(id);
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  const name=t.dataset.tab;
+  ["rooms","items","pricing","preview","export"].forEach(id=>$(id).classList.add("hidden"));
+  $(name).classList.remove("hidden");
+  if(name==="preview"){ buildSections(); calc();}
+  if(name==="export"){ $('out').textContent = JSON.stringify(data,null,2); }
+  if(name==="pricing"){ hydratePricing(); renderRoles(); }
+});
+
+const data = {
+  vatRate:23,
+  pricing:{currency:"EUR",vatDefaults:{room:0,fnb:23,av:23,staff:23},serviceChargePct:0,rounding:0.01},
+  fees:{depositPct:25,outOfHoursSurchargePct:0},
+  labour:{roles:[]},
+  rooms:[],
+  categories:[],
+  copy:{closingTitle:"Optional add-ons before checkout",closingLead:"You may also add:"}
+};
+
+function addRoom(){
+  const rm={id:"RM-"+Math.random().toString(36).slice(2,7).toUpperCase(),name:"",features:{},layouts:[{type:"Boardroom",capacity:10,default:true}],baseRates:{perHourExVAT:0,perHalfDayExVAT:0,perDayExVAT:0,minDurationMins:60,earliestStart:"07:00",latestEnd:"22:00"}};
+  data.rooms.push(rm); renderRooms();
+}
+$("addRoom").onclick=addRoom;
+
+function renderRooms(){
+  const w=$("roomsWrap"); w.innerHTML="";
+  data.rooms.forEach((r,i)=>{
+    const d=document.createElement("div"); d.className="section";
+    d.innerHTML=`<label>Room name</label><input value="${r.name||""}" id="rn-${i}">
+      <div class="grid grid-4">
+        <div><label>Per hour Ex VAT</label><input type="number" step="0.01" value="${r.baseRates.perHourExVAT}" id="rh-${i}"></div>
+        <div><label>Per day Ex VAT</label><input type="number" step="0.01" value="${r.baseRates.perDayExVAT}" id="rd-${i}"></div>
+        <div><label>Earliest start</label><input type="time" value="${r.baseRates.earliestStart}" id="rs-${i}"></div>
+        <div><label>Latest end</label><input type="time" value="${r.baseRates.latestEnd}" id="re-${i}"></div>
+      </div>`;
+    w.append(d);
+    d.querySelector("#rn-"+i).oninput=(e)=>{ r.name=e.target.value; };
+    d.querySelector("#rh-"+i).oninput=(e)=>{ r.baseRates.perHourExVAT=Number(e.target.value||0); };
+    d.querySelector("#rd-"+i).oninput=(e)=>{ r.baseRates.perDayExVAT=Number(e.target.value||0); };
+    d.querySelector("#rs-"+i).oninput=(e)=>{ r.baseRates.earliestStart=e.target.value||"07:00"; };
+    d.querySelector("#re-"+i).oninput=(e)=>{ r.baseRates.latestEnd=e.target.value||"22:00"; };
+  });
+}
+
+$("addCat").onclick=()=>{
+  data.categories.push({id:"CAT-"+Math.random().toString(36).slice(2,6).toUpperCase(),name:"New",sectionLabel:"New",items:[],sort:(data.categories.length+1)*10,showClosingUpsell:true});
+  renderCats();
+};
+$("seed").onclick=()=>{
+  if(!data.categories.some(c=>c.id==="CAT-FNB")){
+    data.categories.push({id:"CAT-FNB",name:"Food & Beverage",sectionLabel:"F&B",sort:10,showClosingUpsell:true,items:[
+      {id:"ITM-COF",name:"Coffee & Tea (refills)",inclusive:false,pricingMode:"simple",priceType:"per_person",unitName:"person",priceExVAT:4.5,taxable:true,step:1,publicLabel:"Coffee & Tea"}
+    ]});
+  }
+  if(!data.categories.some(c=>c.id==="CAT-AV")){
+    data.categories.push({id:"CAT-AV",name:"Audio/Visual",sectionLabel:"AV",sort:20,showClosingUpsell:true,items:[
+      {id:"ITM-PTZ",name:"PTZ Camera Kit",inclusive:false,pricingMode:"hour_or_day",ratePerHourExVAT:60,ratePerDayExVAT:180,dayCapHours:4,roundHoursUp:true,taxable:true,step:1,publicLabel:"PTZ Camera Kit"}
+    ]});
+  }
+  renderCats();
+};
+
+function renderCats(){
+  const w=$("catWrap"); w.innerHTML="";
+  data.categories.sort((a,b)=>(a.sort||0)-(b.sort||0)).forEach((c,ci)=>{
+    const sec=document.createElement("div"); sec.className="section";
+    const h=document.createElement("div"); h.innerHTML=`<b>${c.sectionLabel||c.name}</b> <span class="badge">ID ${c.id}</span> <button class="btn" id="ai-${ci}">Add item</button>`;
+    sec.append(h);
+    const t=document.createElement("table"); t.className="table";
+    t.innerHTML="<thead><tr><th>Inclusive</th><th>Name</th><th>Mode</th><th>Type</th><th>Unit</th><th>Price</th><th>Rate/hr</th><th>Rate/day</th></tr></thead><tbody></tbody>";
+    const tb=t.querySelector("tbody");
+    (c.items||[]).forEach((it,ii)=>{
+      const tr=document.createElement("tr");
+      const inc=document.createElement("input"); inc.type="checkbox"; inc.checked=!!it.inclusive; inc.onchange=()=>it.inclusive=inc.checked;
+      const nm=document.createElement("input"); nm.value=it.name||""; nm.oninput=()=>it.name=nm.value;
+      const mode=document.createElement("select"); ["simple","hour_or_day"].forEach(o=>mode.append(new Option(o,o))); mode.value=it.pricingMode||"simple"; mode.onchange=()=>it.pricingMode=mode.value;
+      const typ=document.createElement("select"); ["per_person","per_item","per_room","per_hour","per_day"].forEach(o=>typ.append(new Option(o,o))); typ.value=it.priceType||"per_item"; typ.onchange=()=>it.priceType=typ.value;
+      const unit=document.createElement("input"); unit.value=it.unitName||""; unit.oninput=()=>it.unitName=unit.value;
+      const price=document.createElement("input"); price.type="number"; price.step="0.01"; price.value=it.priceExVAT||0; price.oninput=()=>it.priceExVAT=Number(price.value||0);
+      const hr=document.createElement("input"); hr.type="number"; hr.step="0.01"; hr.value=it.ratePerHourExVAT||0; hr.oninput=()=>it.ratePerHourExVAT=Number(hr.value||0);
+      const day=document.createElement("input"); day.type="number"; day.step="0.01"; day.value=it.ratePerDayExVAT||0; day.oninput=()=>it.ratePerDayExVAT=Number(day.value||0);
+      [inc,nm,mode,typ,unit,price,hr,day].forEach(el=>{const td=document.createElement("td"); td.append(el); tr.append(td);});
+      tb.append(tr);
+    });
+    sec.append(t);
+    w.append(sec);
+    h.querySelector("#ai-"+ci).onclick=()=>{ c.items.push({id:"ITM-"+Math.random().toString(36).slice(2,7).toUpperCase(),name:"",pricingMode:"simple",priceType:"per_item",unitName:"each",priceExVAT:0}); renderCats(); };
+  });
+}
+
+function hydratePricing(){
+  $("cur").value = data.pricing?.currency || "EUR";
+  $("vat").value = JSON.stringify(data.pricing?.vatDefaults || {room:0,fnb:23,av:23,staff:23});
+  $("svc").value = data.pricing?.serviceChargePct || 0;
+  $("rnd").value = data.pricing?.rounding || 0.01;
+  $("dep").value = data.fees?.depositPct || 25;
+  $("ooh").value = data.fees?.outOfHoursSurchargePct || 0;
+}
+function persistPricing(){
+  data.pricing = data.pricing || {};
+  data.pricing.currency = $("cur").value || "EUR";
+  try{ data.pricing.vatDefaults = JSON.parse($("vat").value||"{}"); }catch(e){ alert("VAT JSON invalid"); }
+  data.pricing.serviceChargePct = Number($("svc").value||0);
+  data.pricing.rounding = Number($("rnd").value||0.01);
+  data.fees = data.fees || {};
+  data.fees.depositPct = Number($("dep").value||0);
+  data.fees.outOfHoursSurchargePct = Number($("ooh").value||0);
+}
+
+$("addRole").onclick=()=>{
+  (data.labour.roles=data.labour.roles||[]).push({id:"ROL-"+Math.random().toString(36).slice(2,7).toUpperCase(),name:"",rateStandardExVAT:0,minCalloutHours:4});
+  renderRoles();
+};
+function renderRoles(){
+  const w=$("rolesWrap"); w.innerHTML="";
+  (data.labour.roles||[]).forEach((r,i)=>{
+    const d=document.createElement("div"); d.className="section";
+    d.innerHTML = `<label>Role</label><input value="${r.name||""}" id="rname-${i}">
+    <div class="grid grid-4">
+      <div><label>Std €/hr</label><input type="number" step="0.01" value="${r.rateStandardExVAT||0}" id="rr-${i}"></div>
+      <div><label>Min callout (h)</label><input type="number" step="0.5" value="${r.minCalloutHours||0}" id="rc-${i}"></div>
+    </div>`;
+    w.append(d);
+    d.querySelector("#rname-"+i).oninput=(e)=>r.name=e.target.value;
+    d.querySelector("#rr-"+i).oninput=(e)=>r.rateStandardExVAT=Number(e.target.value||0);
+    d.querySelector("#rc-"+i).oninput=(e)=>r.minCalloutHours=Number(e.target.value||0);
+  });
+}
+
+/* preview calc */
+const toMin=t=>{ if(!t) return 0; const [h,m]=(t||"").split(":").map(Number); return h*60+(m||0); };
+function buildSections(){
+  const w=$("sections"); w.innerHTML="";
+  data.categories.forEach(c=>{
+    const sec=document.createElement("div"); sec.className="section";
+    const h=document.createElement("b"); h.textContent=c.sectionLabel||c.name; sec.append(h);
+    (c.items||[]).filter(x=>!x.inclusive).forEach(x=>{
+      const row=document.createElement("div"); row.style.display="grid"; row.style.gridTemplateColumns="1fr 130px 120px"; row.style.gap="8px"; row.style.alignItems="center";
+      const label=document.createElement("div"); label.innerHTML="<strong>"+(x.publicLabel||x.name||x.id)+"</strong> <span class='small'>("+(x.pricingMode||"")+")</span>";
+      const qty=document.createElement("input"); qty.type="number"; qty.min="0"; qty.step="1"; qty.value="0"; qty.id="sel-"+x.id; qty.oninput=calc;
+      const price=document.createElement("div"); price.className="small";
+      if(x.pricingMode==="hour_or_day"){ price.textContent=`€${x.ratePerHourExVAT||0}/hr or €${x.ratePerDayExVAT||0}/day`; }
+      else { price.textContent=`€${x.priceExVAT||0} / ${(x.unitName||"unit")}`; }
+      row.append(label, qty, price); sec.append(row);
+    });
+    w.append(sec);
+  });
+}
+function collect(){
+  const chosen=[];
+  data.categories.forEach(c=> (c.items||[]).forEach(x=>{
+    if(x.inclusive) return;
+    const el=document.getElementById("sel-"+x.id);
+    if(el){ const q=Number(el.value||0); if(q>0) chosen.push({...x, qty:q}); }
+  }));
+  return chosen;
+}
+function calc(){
+  const start=$("pStart").value||"09:00", end=$("pEnd").value||"12:00"; let h=Math.max(1,(toMin(end)-toMin(start))/60);
+  const att=Number($("pAtt").value||0);
+  let ex=0, vat=0;
+  collect().forEach(x=>{
+    if(x.pricingMode==="hour_or_day"){
+      const cap=Number(x.dayCapHours||8), hr=Number(x.ratePerHourExVAT||0), dr=Number(x.ratePerDayExVAT||0);
+      ex += (h>=cap && dr>0) ? dr*x.qty : hr*Math.ceil(h)*x.qty;
+    }else{
+      const unit=Number(x.priceExVAT||0);
+      let mult = x.qty;
+      if(x.priceType==="per_person") mult = x.qty * att;
+      if(x.priceType==="per_hour") mult = x.qty * Math.ceil(h);
+      ex += unit * mult;
+    }
+  });
+  vat = ex * (Number(data.vatRate||0)/100);
+  $("ex").textContent = "Ex VAT: €"+ex.toFixed(2);
+  $("vatT").textContent = "VAT: €"+vat.toFixed(2);
+  $("inc").textContent = "Inc VAT: €"+(ex+vat).toFixed(2);
+}
+
+/* export/import */
+$("loadAll").onclick=()=>{ const raw=localStorage.getItem(KEY); if(!raw) return alert("No draft found"); const obj=JSON.parse(raw); Object.keys(data).forEach(k=>delete data[k]); Object.assign(data,obj); renderRooms(); renderCats(); hydratePricing(); renderRoles(); $('saved').textContent='Draft: loaded';};
+$("clearAll").onclick=()=>{ localStorage.removeItem(KEY); $('saved').textContent='Draft: empty'; alert("Cleared local draft."); };
+$("importJSON").onclick=()=>{ const f=document.createElement("input"); f.type="file"; f.accept="application/json"; f.onchange=async()=>{ const t=await f.files[0].text(); const obj=JSON.parse(t); Object.keys(data).forEach(k=>delete data[k]); Object.assign(data,obj); renderRooms(); renderCats(); hydratePricing(); renderRoles(); $('saved').textContent='Imported JSON'; }; f.click(); };
+$("exportJSON").onclick=()=>{ persistPricing(); const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="venue-admin-reissue.json"; a.click(); URL.revokeObjectURL(url); };
+
+/* init */
+function init(){ renderRooms(); renderCats(); hydratePricing(); renderRoles(); }
+init();
+</script>
