@@ -1,0 +1,382 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>[R004f‑k] Admin — Availability Engine v1</title>
+<style>
+:root{--bd:#e5e7eb;--ink:#0f172a;--mut:#64748b;--brand:#0ea5e9}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--ink)}
+.wrap{max-width:1600px;margin:0 auto;padding:16px}
+header{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--bd);z-index:5}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.sp{flex:1}
+.btn{border:1px solid var(--bd);border-radius:10px;background:#fff;padding:8px 12px;cursor:pointer;font-weight:600}
+.btn.small{padding:6px 10px;font-size:.9rem}.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.pill{padding:4px 8px;border:1px solid var(--bd);border-radius:999px;font-size:12px;background:#fff}
+.card{background:#fff;border:1px solid var(--bd);border-radius:14px;margin:16px 0}
+.h{padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;gap:8px;align-items:center}.c{padding:16px}
+.tabs{display:flex;gap:8px;border-bottom:1px solid var(--bd);padding:8px 0}
+.tabs button{all:unset;padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:600;color:#475569}
+.tabs button.active{background:#f1f5f9;color:#111827}
+.section{display:none}.section.active{display:block}
+small.mut{color:var(--mut)}
+.grid{display:grid;gap:12px}.g3{grid-template-columns:1fr 1fr 1fr}
+.tableWrap{overflow-x:auto}.calendar{display:grid;grid-template-columns:80px 1fr;border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.calHead{display:grid;grid-template-columns:80px 1fr;background:#f8fafc;border-bottom:1px solid var(--bd)}
+.calHead div{padding:8px 10px;font-weight:600}
+.times{border-right:1px solid var(--bd)}
+.slot{height:28px;border-bottom:1px dashed #f1f5f9}
+.col{position:relative}
+.event{position:absolute;left:4px;right:4px;border-radius:10px;color:#fff;padding:4px 6px;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.ev-book{background:#10b981cc}.ev-hold{background:#f59e0bcc}.ev-blk{background:#1f2937dd}.ev-main{background:#6366f1cc}
+.ghost{position:absolute;left:4px;right:4px;background:#38bdf833;border:1px dashed #38bdf8;border-radius:10px}
+.warn{background:#fff1f2;border:2px solid #fecaca;color:#7f1d1d;border-radius:12px;padding:10px;margin:8px 0}
+.info{background:#ecfeff;border:2px solid #67e8f9;color:#155e75;border-radius:12px;padding:10px;margin:8px 0}
+input,select{border:1px solid var(--bd);border-radius:10px;padding:8px 10px}
+label{font-weight:600;font-size:12px;display:block;margin-bottom:4px}
+.kbd{font-family:ui-monospace,monospace;border:1px solid var(--bd);padding:0 6px;border-radius:6px;background:#f8fafc}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap row">
+    <strong>[R004f‑k] Admin</strong>
+    <span class="pill" id="counts">Rooms: 0 | Calendars: 0</span>
+    <div class="sp"></div>
+    <label class="btn small">Import JSON<input id="imp" type="file" accept="application/json" style="display:none"></label>
+    <button id="export" class="btn small primary">Export JSON</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="card">
+    <div class="h"><b>Admin</b><span class="pill">Availability Engine v1 — drag, move, resize • rounding • buffers • overlap • lead‑time • OOH flag</span></div>
+    <div class="c">
+      <div class="tabs">
+        <button data-tab="calendar" class="active">1) Calendar</button>
+        <button data-tab="settings">2) Settings</button>
+        <button data-tab="raw">3) Raw JSON</button>
+      </div>
+
+      <section id="calendar" class="section active">
+        <div class="grid g3">
+          <div>
+            <label>Room</label>
+            <select id="room"></select>
+          </div>
+          <div>
+            <label>Date</label>
+            <input id="date" type="date"/>
+          </div>
+          <div>
+            <label>Type</label>
+            <select id="etype">
+              <option value="BOOKING">BOOKING</option>
+              <option value="HOLD">HOLD</option>
+              <option value="BLACKOUT">BLACKOUT</option>
+              <option value="MAINTENANCE">MAINTENANCE</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="oohNote" class="info" style="display:none;margin-top:10px">Outside opening hours → will be flagged for OOH pricing.</div>
+
+        <div id="calWrap" style="margin-top:12px"></div>
+
+        <div class="info" style="margin-top:10px">
+          <b>How:</b> Drag on the grid to create. Drag an event to move. Drag its edges to resize. Step size = calendar’s rounding step. Buffers are enforced on clash.
+        </div>
+      </section>
+
+      <section id="settings" class="section">
+        <div class="grid g3">
+          <div>
+            <label>Rounding step (mins)</label>
+            <input id="roundStep" type="number" min="5" step="5">
+          </div>
+          <div>
+            <label>Pre buffer (mins)</label>
+            <input id="preBuf" type="number" min="0" step="5">
+          </div>
+          <div>
+            <label>Post buffer (mins)</label>
+            <input id="postBuf" type="number" min="0" step="5">
+          </div>
+          <div>
+            <label>Min lead time (mins)</label>
+            <input id="minLead" type="number" min="0" step="15">
+          </div>
+          <div>
+            <label>Max lead time (days)</label>
+            <input id="maxLead" type="number" min="0" step="1">
+          </div>
+          <div>
+            <label>Timezone</label>
+            <input id="tz" placeholder="Europe/Dublin">
+          </div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button id="saveCal" class="btn small primary">Save calendar settings</button>
+        </div>
+        <div class="info" style="margin-top:10px">
+          Opening hours are managed in the previous step (R004f‑j). OOH check here uses those hours.
+        </div>
+      </section>
+
+      <section id="raw" class="section"><pre id="dump" style="white-space:pre-wrap"></pre></section>
+    </div>
+  </div>
+</main>
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const KEY="admin_draft_v2";
+  function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"null") }catch(e){ return null } }
+  function save(){ localStorage.setItem(KEY, JSON.stringify(state)); renderCounts(); renderRaw(); }
+
+  let state = load() || { rooms:[], calendars:{} };
+  state.calendars = state.calendars||{};
+
+  function ensure(){ (state.rooms||[]).forEach(r=>{ if(!state.calendars[r.id]) state.calendars[r.id]={roomId:r.id,timezone:"Europe/Dublin",roundingStepMins:15,defaultPreBufferMins:0,defaultPostBufferMins:0,minLeadTimeMins:0,maxLeadTimeDays:365,openingHours:{},events:[]}; });}
+  ensure();
+
+  function renderCounts(){ $("counts").textContent=`Rooms: ${(state.rooms||[]).length} | Calendars: ${Object.keys(state.calendars).length}`; }
+  function renderRooms(){
+    const rs=(state.rooms||[]); const sel=$("room"); sel.innerHTML = (rs.length? rs: Object.keys(state.calendars).map(id=>({id,name:id})) ).map(r=>`<option value="${r.id}">${r.name||r.id}</option>`).join("");
+  }
+
+  // Utilities
+  function toISO(date, hh, mm, tz){
+    const d=new Date(date+"T"+pad(hh)+":"+pad(mm)+":00"); // local
+    const off=-d.getTimezoneOffset(); // minutes east
+    const sign=off>=0?"+":"-"; const abs=Math.abs(off); const oh=Math.floor(abs/60), om=abs%60;
+    return d.toISOString().slice(0,19)+sign+pad(oh)+":"+pad(om);
+  }
+  function fromISO(iso){
+    const d=new Date(iso); return { hh:d.getHours(), mm:d.getMinutes(), date:d.toISOString().slice(0,10), d };
+  }
+  const DAYS=["SU","MO","TU","WE","TH","FR","SA"];
+  function withinOpening(cal, start, end){
+    const oh=cal.openingHours||{};
+    const sDate=new Date(start); const eDate=new Date(end);
+    let cursor=new Date(sDate);
+    while(cursor<eDate){
+      const day=DAYS[cursor.getDay()];
+      const ranges=(oh[day]||[]);
+      if(!ranges.length) return false;
+      const y=cursor.getFullYear(), m=cursor.getMonth(), d=cursor.getDate();
+      const mins=t=>{ const [H,M]=t.split(":").map(Number); return H*60+M; }
+      const segStartMin=cursor.getHours()*60+cursor.getMinutes();
+      const segEndMin=(cursor.getDate()===eDate.getDate()? eDate.getHours()*60+eDate.getMinutes(): 24*60);
+      let covered=false;
+      ranges.forEach(r=>{
+        if(!r.start||!r.end) return;
+        const rs=mins(r.start), re=mins(r.end);
+        if(segStartMin>=rs && segEndMin<=re) covered=true;
+      });
+      if(!covered) return false;
+      // jump to next midnight
+      cursor=new Date(y,m,d+1,0,0,0);
+    }
+    return true;
+  }
+
+  function applyBuffers(ev, cal){
+    const pre=(ev.preBufferMins??cal.defaultPreBufferMins??0);
+    const post=(ev.postBufferMins??cal.defaultPostBufferMins??0);
+    return { start:new Date(new Date(ev.startsAt).getTime()-pre*60000), end:new Date(new Date(ev.endsAt).getTime()+post*60000) };
+  }
+  function overlap(a, b){
+    return a.start < b.end && b.start < a.end;
+  }
+  function checkOverlap(cal, candidate){
+    const cand=applyBuffers(candidate,cal);
+    for(const e of (cal.events||[])){
+      if(e.status==="cancelled") continue;
+      if(e.id===candidate.id) continue;
+      const other=applyBuffers(e,cal);
+      if(overlap(cand,other)) return {ok:false,conflict:e};
+    }
+    return {ok:true};
+  }
+  function withinLeadTimes(cal, startISO){
+    const min=cal.minLeadTimeMins||0; const maxd=cal.maxLeadTimeDays||365;
+    const now=new Date();
+    const start=new Date(startISO);
+    if(start.getTime() < now.getTime()+min*60000) return {ok:false,reason:`Inside minimum lead time (${min} mins)`};
+    if(start.getTime() > now.getTime()+maxd*86400000) return {ok:false,reason:`Beyond maximum lead time (${maxd} days)`};
+    return {ok:true};
+  }
+  function detectOOH(cal, ev){ return !withinOpening(cal, ev.startsAt, ev.endsAt); }
+
+  function addEvent(cal, ev){
+    const lead=withinLeadTimes(cal, ev.startsAt); if(!lead.ok) return lead;
+    const ol=checkOverlap(cal, ev); if(!ol.ok) return {ok:false,reason:"Conflicts with existing event (buffers)", conflict:ol.conflict};
+    cal.events=cal.events||[]; cal.events.push(ev); return {ok:true};
+  }
+  function updateEvent(cal, ev){
+    const ix=(cal.events||[]).findIndex(e=>e.id===ev.id); if(ix<0) return {ok:false,reason:"Event not found"};
+    const ol=checkOverlap(cal, ev); if(!ol.ok) return {ok:false,reason:"Conflicts with existing event (buffers)", conflict:ol.conflict};
+    cal.events[ix]=ev; return {ok:true};
+  }
+
+  // Calendar UI
+  const SLOT_H=28;
+  function pad(n){ return String(n).padStart(2,"0"); }
+  function slots(step){ const out=[]; for(let h=0; h<24; h++){ for(let m=0; m<60; m+=step){ out.push({h,m}); } } return out; }
+  let drag=null; // {mode:"create"|"move"|"resize-s"|"resize-e", id?, y0, start, end}
+
+  function renderCalendar(){
+    const rid=$("room").value; const cal=state.calendars[rid]; if(!cal) return;
+    const step=cal.roundingStepMins||30;
+    $("roundStep").value=step; $("preBuf").value=cal.defaultPreBufferMins||0; $("postBuf").value=cal.defaultPostBufferMins||0;
+    $("minLead").value=cal.minLeadTimeMins||0; $("maxLead").value=cal.maxLeadTimeDays||365; $("tz").value=cal.timezone||"Europe/Dublin";
+    const date=$("date").value || new Date().toISOString().slice(0,10); $("date").value=date;
+
+    const sw=slots(step);
+    const wrap=document.createElement("div"); wrap.className="calendar";
+    const head=document.createElement("div"); head.className="calHead"; head.innerHTML=`<div></div><div>${date}</div>`;
+    wrap.appendChild(head);
+
+    // time column
+    const times=document.createElement("div"); times.className="times";
+    sw.forEach((s,i)=>{ const div=document.createElement("div"); div.className="slot"; if(s.m===0){ div.style.borderBottom="1px solid #e5e7eb"; div.innerHTML=`<div style="position:relative;top:-10px;right:6px;text-align:right;font-size:11px;color:#64748b">${pad(s.h)}:${pad(s.m)}</div>` } times.appendChild(div); });
+    wrap.appendChild(times);
+
+    const col=document.createElement("div"); col.className="col"; col.style.height=(SLOT_H*sw.length)+"px";
+
+    // events
+    function yFor(h,m){ const i=Math.round((h*60+m)/step); return i*SLOT_H; }
+    function durMin(a,b){ return (new Date(b)-new Date(a))/60000; }
+    function place(ev){
+      const s=new Date(ev.startsAt), e=new Date(ev.endsAt);
+      const y=yFor(s.getHours(), s.getMinutes());
+      const y2=yFor(e.getHours(), e.getMinutes());
+      const div=document.createElement("div");
+      const type=ev.type;
+      const cls= type==="BOOKING"?"ev-book" : type==="HOLD"?"ev-hold" : type==="BLACKOUT"?"ev-blk":"ev-main";
+      div.className="event "+cls;
+      div.style.top=(y+2)+"px"; div.style.height=(Math.max(SLOT_H, y2-y)-4)+"px";
+      div.textContent=`${type} ${pad(s.getHours())}:${pad(s.getMinutes())}–${pad(e.getHours())}:${pad(e.getMinutes())}`;
+      div.onmousedown=(me)=>{ drag={mode:"move", id:ev.id, y0:me.clientY, start:new Date(ev.startsAt), end:new Date(ev.endsAt)}; me.preventDefault(); };
+      // resize handles
+      const topHandle=document.createElement("div"); topHandle.style.position="absolute"; topHandle.style.left="0"; topHandle.style.right="0"; topHandle.style.top="-3px"; topHandle.style.height="6px"; topHandle.style.cursor="ns-resize"; div.appendChild(topHandle);
+      topHandle.onmousedown=(me)=>{ drag={mode:"resize-s", id:ev.id, y0:me.clientY, start:new Date(ev.startsAt), end:new Date(ev.endsAt)}; me.stopPropagation(); };
+      const botHandle=document.createElement("div"); botHandle.style.position="absolute"; botHandle.style.left="0"; botHandle.style.right="0"; botHandle.style.bottom="-3px"; botHandle.style.height="6px"; botHandle.style.cursor="ns-resize"; div.appendChild(botHandle);
+      botHandle.onmousedown=(me)=>{ drag={mode:"resize-e", id:ev.id, y0:me.clientY, start:new Date(ev.startsAt), end:new Date(ev.endsAt)}; me.stopPropagation(); };
+      col.appendChild(div);
+    }
+    (cal.events||[]).filter(ev=>ev.startsAt.startsWith(date)).forEach(place);
+
+    // drag create
+    col.onmousedown=(e)=>{
+      if(e.target!==col) return;
+      const rect=col.getBoundingClientRect();
+      const y=e.clientY-rect.top;
+      const slot=Math.round(y/SLOT_H);
+      const startMin=slot*step; const stH=Math.floor(startMin/60), stM=startMin%60;
+      const sISO=toISO(date, stH, stM, cal.timezone);
+      const eISO=toISO(date, stH, stM+step, cal.timezone);
+      drag={mode:"create", y0:e.clientY, start:new Date(sISO), end:new Date(eISO)};
+      renderGhost();
+      e.preventDefault();
+    };
+    document.onmousemove=(e)=>{
+      if(!drag) return;
+      const deltaPx = e.clientY - drag.y0;
+      const deltaSlots = Math.round(deltaPx / SLOT_H);
+      const stepMs=(cal.roundingStepMins||step)*60000;
+      if(drag.mode==="move"){
+        const dur = drag.end - drag.start;
+        const newStart = new Date(drag.start.getTime() + deltaSlots*stepMs);
+        const newEnd = new Date(newStart.getTime()+dur);
+        drag.start=newStart; drag.end=newEnd; drag.y0=e.clientY;
+      }else if(drag.mode==="resize-s"){
+        const newStart = new Date(drag.start.getTime()+deltaSlots*stepMs);
+        if(newStart < drag.end){ drag.start=newStart; drag.y0=e.clientY; }
+      }else if(drag.mode==="resize-e"){
+        const newEnd = new Date(drag.end.getTime()+deltaSlots*stepMs);
+        if(newEnd > drag.start){ drag.end=newEnd; drag.y0=e.clientY; }
+      }else if(drag.mode==="create"){
+        const newEnd=new Date(drag.end.getTime()+deltaSlots*stepMs);
+        if(newEnd>drag.start){ drag.end=newEnd; drag.y0=e.clientY; }
+      }
+      renderGhost();
+    };
+    document.onmouseup=()=>{
+      if(!drag) return clearGhost();
+    };
+
+    let ghost=null;
+    function renderGhost(){
+      clearGhost();
+      const s=drag.start, e=drag.end;
+      const y=yFor(s.getHours(), s.getMinutes()), y2=yFor(e.getHours(), e.getMinutes());
+      ghost=document.createElement("div"); ghost.className="ghost"; ghost.style.top=(y+2)+"px"; ghost.style.height=(Math.max(SLOT_H,y2-y)-4)+"px";
+      col.appendChild(ghost);
+      const ev={ id:drag.id||("EVT-"+Math.random().toString(36).slice(2,8).toUpperCase()), roomId:rid, type:$("etype").value, status:"provisional", startsAt:s.toISOString(), endsAt:e.toISOString() };
+      $("oohNote").style.display = detectOOH(cal, ev) ? "block" : "none";
+    }
+    function clearGhost(){
+      if(!drag) return;
+      const s=drag.start, e=drag.end;
+      const ev={ id:drag.id||("EVT-"+Math.random().toString(36).slice(2,8).toUpperCase()), roomId:rid, type:$("etype").value, status:"confirmed", startsAt:s.toISOString(), endsAt:e.toISOString(), preBufferMins:cal.defaultPreBufferMins, postBufferMins:cal.defaultPostBufferMins };
+      if(drag.mode==="create"){
+        const res=addEvent(cal, ev);
+        if(!res.ok){ alert(res.reason||"Cannot add"); }
+      }else{
+        const res=updateEvent(cal, ev);
+        if(!res.ok){ alert(res.reason||"Cannot update"); }
+      }
+      drag=null; ghost?.remove(); renderCalendar(); save();
+    }
+
+    $("calWrap").innerHTML=""; $("calWrap").appendChild(wrap); wrap.appendChild(col);
+  }
+
+  // Settings save
+  $("saveCal").onclick=()=>{
+    const cal=state.calendars[$("room").value]; if(!cal) return;
+    cal.roundingStepMins = parseInt($("roundStep").value||cal.roundingStepMins||30);
+    cal.defaultPreBufferMins = parseInt($("preBuf").value||0);
+    cal.defaultPostBufferMins = parseInt($("postBuf").value||0);
+    cal.minLeadTimeMins = parseInt($("minLead").value||0);
+    cal.maxLeadTimeDays = parseInt($("maxLead").value||365);
+    cal.timezone = $("tz").value||cal.timezone||"Europe/Dublin";
+    save(); alert("Calendar settings saved ✔");
+  };
+
+  // Tabs
+  document.querySelectorAll(".tabs button").forEach(b=>{
+    b.onclick=()=>{
+      document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+      document.getElementById(b.dataset.tab).classList.add("active");
+      renderRaw(); if(b.dataset.tab==="calendar") renderCalendar();
+    };
+  });
+
+  // Import/Export
+  $("imp").addEventListener("change",ev=>{
+    const f=ev.target.files[0]; if(!f) return;
+    const r=new FileReader(); r.onload=()=>{ try{ state=JSON.parse(r.result||"{}"); state.calendars=state.calendars||{}; ensure(); renderAll(); save(); alert("Import complete ✔"); }catch(e){ alert("Invalid JSON"); } };
+    r.readAsText(f);
+  });
+  $("export").onclick=()=>{
+    const a=document.createElement("a"), ts=new Date().toISOString().replace(/[:.]/g,"-");
+    a.download=`admin-data_R004f-k_${ts}.json`;
+    a.href=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:"application/json"}));
+    a.click();
+  };
+
+  function renderRaw(){ $("dump").textContent=JSON.stringify(state,null,2); }
+  function renderAll(){ renderCounts(); renderRooms(); $("date").value=new Date().toISOString().slice(0,10); renderCalendar(); renderRaw(); }
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
