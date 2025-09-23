@@ -1,0 +1,226 @@
+{
+  "venue": {
+    "venueId": "VEN-001",
+    "name": "Example Hotel",
+    "address1": "1 Example Street",
+    "city": "Dublin",
+    "country": "Ireland",
+    "timezone": "Europe/Dublin",
+    "currency": "EUR",
+    "vatRatePercent": 23,
+    "serviceChargePercent": 0,
+    "depositPercent": 20,
+    "pricesIncludeVAT": false
+  },
+  "spaces": [
+    {
+      "name": "Cedar Boardroom",
+      "floor": "1",
+      "areaSqm": 22,
+      "ceilingHeightM": 3.1,
+      "maxOccupancy": 10,
+      "naturalLight": true,
+      "blackout": true,
+      "accessible": true,
+      "notes": "Ideal for 2–10 pax",
+      "layouts": [
+        {
+          "type": "Boardroom",
+          "capacity": 10,
+          "isDefault": true
+        },
+        {
+          "type": "Classroom",
+          "capacity": 8,
+          "isDefault": false
+        },
+        {
+          "type": "U-Shape",
+          "capacity": 8,
+          "isDefault": false
+        },
+        {
+          "type": "Banquet",
+          "capacity": 0,
+          "isDefault": false
+        },
+        {
+          "type": "Conference",
+          "capacity": 12,
+          "isDefault": false
+        },
+        {
+          "type": "Theater",
+          "capacity": 16,
+          "isDefault": false
+        }
+      ],
+      "availability": [
+        {
+          "day": "Mon",
+          "openTime": "08:00",
+          "closeTime": "20:00",
+          "bookable": true,
+          "leadTimeHours": 2,
+          "cutoffHours": 1,
+          "setupBufferMin": 15,
+          "teardownBufferMin": 15
+        },
+        {
+          "day": "Tue",
+          "openTime": "08:00",
+          "closeTime": "20:00",
+          "bookable": true,
+          "leadTimeHours": 2,
+          "cutoffHours": 1,
+          "setupBufferMin": 15,
+          "teardownBufferMin": 15
+        },
+        {
+          "day": "Wed",
+          "openTime": "08:00",
+          "closeTime": "20:00",
+          "bookable": true,
+          "leadTimeHours": 2,
+          "cutoffHours": 1,
+          "setupBufferMin": 15,
+          "teardownBufferMin": 15
+        },
+        {
+          "day": "Thu",
+          "openTime": "08:00",
+          "closeTime": "20:00",
+          "bookable": true,
+          "leadTimeHours": 2,
+          "cutoffHours": 1,
+          "setupBufferMin": 15,
+          "teardownBufferMin": 15
+        },
+        {
+          "day": "Fri",
+          "openTime": "08:00",
+          "closeTime": "20:00",
+          "bookable": true,
+          "leadTimeHours": 2,
+          "cutoffHours": 1,
+          "setupBufferMin": 15,
+          "teardownBufferMin": 15
+        },
+        {
+          "day": "Sat",
+          "openTime": "08:00",
+          "closeTime": "20:00",
+          "bookable": false,
+          "leadTimeHours": 2,
+          "cutoffHours": 1,
+          "setupBufferMin": 15,
+          "teardownBufferMin": 15
+        },
+        {
+          "day": "Sun",
+          "openTime": "08:00",
+          "closeTime": "20:00",
+          "bookable": false,
+          "leadTimeHours": 2,
+          "cutoffHours": 1,
+          "setupBufferMin": 15,
+          "teardownBufferMin": 15
+        }
+      ],
+      "blackouts": [],
+      "ratePlans": [
+        {
+          "name": "Standard Meeting",
+          "chargeModel": "per_hour",
+          "currency": "EUR",
+          "baseHourly": 60,
+          "halfDayPrice": 220,
+          "fullDayPrice": 380,
+          "minDurationMin": 60,
+          "granularityMin": 30,
+          "includedHours": 0,
+          "overtimeUnitMin": 30,
+          "overtimeRate": 70,
+          "includedAttendees": 4,
+          "tiers": [
+            {
+              "attendeeMin": 5,
+              "attendeeMax": 12,
+              "priceType": "per_room",
+              "pricePerHour": 80,
+              "halfDayPrice": 280,
+              "fullDayPrice": 460
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "addons": [
+    {
+      "name": "Auto-tracking PTZ camera",
+      "category": "Tech",
+      "priceType": "per_day",
+      "unitName": "day",
+      "priceExVAT": 180,
+      "minQty": 0,
+      "maxQty": 2,
+      "allowOnline": true,
+      "defaultSelected": false,
+      "description": "Enhanced hybrid/recording"
+    }
+  ],
+  "menus": [
+    {
+      "name": "Arrival Coffee & Pastries",
+      "type": "CoffeeBreak",
+      "priceType": "per_person",
+      "price": 8,
+      "dietaryOptions": "Vegan/Gluten-free on request"
+    }
+  ],
+  "staffRoles": [
+    {
+      "id": "SR-AV",
+      "name": "AV Technician",
+      "hourlyRate": 65,
+      "minHours": 2,
+      "outOfHoursMultiplier": 1.5,
+      "maxConcurrency": 2
+    }
+  ],
+  "fees": [
+    {
+      "name": "Cleaning (overtime)",
+      "calculationType": "per_hour",
+      "amount": 25,
+      "appliesTo": "room",
+      "conditionJSON": "{\"applies_when\":\"overtime>0\"}",
+      "taxable": true
+    }
+  ],
+  "policies": [
+    {
+      "name": "Standard Cancellation",
+      "type": "Cancellation",
+      "termsText": "Free <72h; 50% <48h; 100% <24h",
+      "deadlineHours": 72,
+      "percentCharged": 0,
+      "paymentDueAtBooking": true
+    }
+  ],
+  "discounts": [],
+  "images": [],
+  "network": {
+    "dedicatedBandwidthMbps": 300,
+    "wifiStandard": "Wi-Fi 6"
+  },
+  "mediaTechDefaults": {},
+  "accessibilityDefaults": {
+    "stepFree": true
+  },
+  "sla": {
+    "responseTimeMinutes": 15,
+    "onsiteSupportIncluded": true
+  }
+}
