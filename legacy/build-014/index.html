@@ -1,0 +1,549 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>[R002h] Admin — Rooms (Layouts + Features)</title>
+  <meta name="description" content="Admin app: Rooms with Description, Features, Layout capacities, Base Rates, Categories, Pricing & Fees. R002h fixes feature alignment by using explicit wrappers + for= labels and column chunking." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#ffffff;--card:#ffffff;--ink:#0f172a;--mut:#475569;--bd:#e5e7eb;--brand:#0ea5e9;--accent:#16a34a;--danger:#dc2626; --warn:#f59e0b;}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:1600px;margin:0 auto;padding:16px}
+    header{position:sticky;top:0;background:linear-gradient(180deg,#fff,rgba(255,255,255,.9));backdrop-filter: blur(6px);border-bottom:1px solid var(--bd);z-index:5}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .spacer{flex:1}
+    .btn{border:1px solid var(--bd);border-radius:10px;background:#fff;padding:8px 12px;cursor:pointer;font-weight:600}
+    .btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+    .btn.small{padding:6px 10px;font-size:.9rem}
+    .btn.danger{background:#fee2e2;border-color:#fecaca;color:#991b1b}
+    input,select,textarea{width:100%;border:1px solid var(--bd);border-radius:10px;padding:10px;background:#fff;color:#0f172a}
+    input.invalid, select.invalid, textarea.invalid{border-color:var(--danger)}
+    textarea{min-height:96px}
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:14px;box-shadow:0 1px 2px rgba(0,0,0,.04);margin:16px 0}
+    .card-h{padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;gap:8px;align-items:center}
+    .pill{padding:4px 8px;border:1px solid var(--bd);border-radius:999px;font-size:12px;background:#fff}
+    .card-c{padding:16px}
+    nav.tabs{display:flex;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--bd);position:sticky;top:64px;background:#fff;z-index:4}
+    nav.tabs button{all:unset;padding:10px 12px;border-radius:10px;cursor:pointer;font-weight:600;color:#475569}
+    nav.tabs button.active{background:#f1f5f9;color:#0f172a}
+    .section{display:none}
+    .section.active{display:block}
+    .grid{display:grid;gap:12px}
+    .grid-2{grid-template-columns:1fr 1fr}
+    .grid-3{grid-template-columns:1fr 1fr 1fr}
+    .grid-auto{grid-template-columns:repeat(auto-fit, minmax(360px, 1fr))}
+    @media(max-width:1000px){.grid-3{grid-template-columns:1fr}}
+    table{width:100%;border-collapse:collapse}
+    th,td{border:1px solid var(--bd);padding:8px;text-align:left;font-size:13px}
+    .help{color:#475569;font-size:.9rem}
+    .banner{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:12px;padding:10px 12px;margin-top:12px}
+    .danger-banner{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;border-radius:12px;padding:10px 12px;margin-top:12px}
+    .inline{display:flex;gap:8px;align-items:center}
+    .errors{color:#7f1d1d;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:8px 10px;margin-top:8px}
+    .mut{color:#64748b}
+    .subtle{opacity:.95}
+
+    /* FEATURES: fixed 4 columns (chunked evenly), robust alignment using DIV + label[for] */
+    .features-wrap{background:#f8fafc; padding:16px; border-radius:12px}
+    .features-cols{display:grid;grid-template-columns:repeat(4, 1fr);gap:6px 18px}
+    .features-col{display:flex;flex-direction:column;gap:6px}
+    .feature{display:flex;align-items:center;gap:8px;line-height:1.15;font-size:13px}
+    .feature input{flex:0 0 auto;margin:0}
+    .feature label{flex:1 1 auto;cursor:pointer;display:inline;white-space:normal}
+    .features-tools{display:flex;gap:8px;align-items:center;margin-top:10px;justify-content:flex-end}
+    .features-tools input{width:320px;padding:8px}
+    @media(max-width:1200px){ .features-cols{grid-template-columns:repeat(2,1fr);} .features-tools{justify-content:flex-start} .features-tools input{width:220px} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap row">
+      <strong>[R002h] Admin</strong>
+      <span class="pill">Rooms‑first</span>
+      <span class="pill">Layouts + Features</span>
+      <span class="pill">Base Rates</span>
+      <span class="pill">Pricing & Fees</span>
+      <div class="spacer"></div>
+      <span class="pill" title="Release reference">Ref: R002h</span>
+      <label class="btn small">
+        Import JSON
+        <input id="importInput" type="file" accept="application/json" style="display:none">
+      </label>
+      <button id="exportBtn" class="btn small primary">Export JSON</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="card banner" id="draftBanner" style="display:none">
+      <div class="row"><strong>Save Draft</strong><div class="spacer"></div>
+        <button class="btn small" id="saveDraftBtn">Save</button>
+        <button class="btn small" id="clearDraftBtn">Clear</button>
+      </div>
+      <div class="help">Saves in your browser. Use <b>Export JSON</b> for a file backup.</div>
+    </div>
+
+    <div class="card danger-banner" id="errorBanner" style="display:none"></div>
+
+    <div class="card">
+      <div class="card-h">
+        <b>[R002h] Admin</b>
+        <span class="pill">Rooms / Categories / Pricing & Fees / Preview / Export</span>
+      </div>
+      <div class="card-c">
+        <nav class="tabs">
+          <button data-tab="rooms" class="active">1) Rooms</button>
+          <button data-tab="categories">2) Categories</button>
+          <button data-tab="pricing">3) Pricing & Fees</button>
+          <button data-tab="preview">4) Booker Preview</button>
+        </nav>
+
+        <div id="rooms" class="section active">
+          <div class="row" style="margin-bottom:8px">
+            <input id="roomSearch" placeholder="Search rooms by name…" style="max-width:360px">
+            <div class="spacer"></div>
+            <button class="btn" id="addRoom">Add room</button>
+          </div>
+          <div class="grid grid-auto" id="roomsWrap"></div>
+        </div>
+
+        <div id="categories" class="section">
+          <div class="row"><button class="btn" id="addCat">Add category</button> <button class="btn" id="seed">Seed AV + F&amp;B</button></div>
+          <div id="catWrap"></div>
+        </div>
+
+        <div id="pricing" class="section">
+          <div class="grid grid-3">
+            <div><label>Currency</label><input id="cur" value="EUR"></div>
+            <div><label>VAT defaults (JSON)</label><textarea id="vatDefaults" placeholder='{"room":0,"fnb":23,"av":23,"staff":23}'></textarea></div>
+            <div><label>Rounding step</label><input id="rounding" type="number" step="0.01" value="0.01"></div>
+            <div><label>Service charge %</label><input id="svc" type="number" step="0.1" value="0"></div>
+            <div><label>Deposit %</label><input id="dep" type="number" step="0.1" value="25"></div>
+            <div><label>Out‑of‑hours surcharge %</label><input id="ooh" type="number" step="0.1" value="0"></div>
+          </div>
+        </div>
+
+        <div id="preview" class="section">
+          <div class="help">Preview stub — confirms data shape</div>
+          <pre id="dump" style="white-space:pre-wrap"></pre>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+  (function(){
+    function $(id){ return document.getElementById(id); }
+    function deepClone(o){ return JSON.parse(JSON.stringify(o)); }
+    function titleCase(s){ return String(s||"").toLowerCase().replace(/\\s+/g," ").replace(/(^|\\s)\\S/g, a=>a.toUpperCase()); }
+    function snake(s){ return String(s||"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,""); }
+
+    const FEATURE_MAP = {
+      "Natural light":"natural_light","AC/Heating":"aircon","Wheelchair access":"wheelchair_access","Stage/Podium":"stage_podium",
+      "Breakout area":"breakout_area","Catering allowed":"catering_allowed","Windows":"windows","Sound system":"sound_system",
+      "Projector":"projector","TV/Screen":"tv_screen","Whiteboard":"whiteboard","Flipchart":"flipchart","Conference phone":"conference_phone"
+    };
+    const BUILT_IN_FEATURES = Object.keys(FEATURE_MAP);
+    const COMMON_LAYOUTS = ["Boardroom","U-Shape","Classroom","Theatre","Cabaret","Banquet","Hollow Square"];
+
+    const initial = {
+      vatRate: 23,
+      pricing: { currency:"EUR", vatDefaults:{ room:0, fnb:23, av:23, staff:23 }, serviceChargePct:0, rounding:0.01 },
+      fees: { depositPct:25, outOfHoursSurchargePct:0 },
+      labour: { roles: [] },
+      rooms: [],
+      categories: [],
+      copy: { closingTitle:"Optional add-ons before checkout", closingLead:"You may also add:" }
+    };
+
+    let state = loadDraft() || deepClone(initial);
+
+    function saveDraft(){ try{ localStorage.setItem("admin_draft_v2", JSON.stringify(state)); }catch(e){} flashDraftBanner(); }
+    function loadDraft(){ try{ const raw=localStorage.getItem("admin_draft_v2"); return raw? JSON.parse(raw): null; }catch(e){ return null; } }
+    function clearDraft(){ try{ localStorage.removeItem("admin_draft_v2"); }catch(e){} flashDraftBanner(); }
+    function flashDraftBanner(){ $("draftBanner").style.display = localStorage.getItem("admin_draft_v2") ? "block":"none"; }
+    $("saveDraftBtn").onclick = saveDraft;
+    $("clearDraftBtn").onclick = ()=>{ clearDraft(); alert("Draft cleared"); };
+
+    // Tabs
+    document.querySelectorAll("nav.tabs button").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        const tab = btn.dataset.tab;
+        document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+        document.getElementById(tab).classList.add("active");
+        if (tab==="preview") renderPreview();
+      });
+    });
+
+    // Import / Export
+    $("importInput").addEventListener("change", (ev)=>{
+      const file = ev.target.files[0]; if(!file) return;
+      const r = new FileReader();
+      r.onload = ()=>{
+        try{
+          const data = JSON.parse(String(r.result||"{}"));
+          migrate(data);
+          state = data;
+          renderAll(); saveDraft();
+          alert("Import complete ✔");
+        }catch(e){ console.error(e); alert("Invalid JSON file."); }
+        ev.target.value = "";
+      };
+      r.readAsText(file);
+    });
+
+    $("exportBtn").addEventListener("click", ()=>{
+      (state.rooms||[]).forEach(r=>{
+        let max=0; (r.layouts||[]).forEach(L=>{ const n=parseInt(L.capacity,10); if(isFinite(n)&&n>max) max=n; });
+        r.capacity = max;
+      });
+      const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+      const a = document.createElement("a");
+      a.download = "admin-data.json"; a.href = URL.createObjectURL(blob);
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+    });
+
+    // Categories
+    $("addCat").onclick = ()=>{ state.categories.push({ id:"CAT-"+Math.random().toString(36).slice(2,6).toUpperCase(), name:"" }); renderCategories(); saveDraft(); };
+    $("seed").onclick = ()=>{
+      const seeds=[{id:"CAT-ROOM",name:"Room"},{id:"CAT-AV",name:"AV"},{id:"CAT-FNB",name:"F&B"},{id:"CAT-STAFF",name:"Staff"}];
+      seeds.forEach(s=>{ if(!state.categories.some(c=>c.id===s.id)) state.categories.push(s); });
+      renderCategories(); saveDraft();
+    };
+
+    function renderCategories(){
+      const w=$("catWrap"); w.innerHTML="";
+      (state.categories||[]).forEach((c,idx)=>{
+        const div=document.createElement("div"); div.className="card"; div.innerHTML = `
+          <div class="card-c grid grid-2">
+            <div><label>Category name</label><input value="${c.name||""}" id="cn-${idx}"></div>
+            <div><label>Category ID</label><input value="${c.id||""}" id="ci-${idx}"></div>
+          </div>
+          <div class="card-c"><button class="btn danger small" id="cd-${idx}">Delete</button></div>
+        `;
+        w.appendChild(div);
+        $("cn-"+idx).oninput = e=>{ c.name = e.target.value; saveDraft(); };
+        $("ci-"+idx).oninput = e=>{ c.id = e.target.value; saveDraft(); };
+        $("cd-"+idx).onclick = ()=>{ if(confirm("Delete this category?")){ state.categories.splice(idx,1); renderCategories(); saveDraft(); } };
+      });
+    }
+
+    // Rooms
+    $("addRoom").onclick = ()=>{
+      const catRoom = (state.categories||[]).find(c=>c.id==="CAT-ROOM");
+      const defaultCat = catRoom ? catRoom.id : ((state.categories && state.categories[0]) ? state.categories[0].id : "");
+      const rm = {
+        id:"RM-"+Math.random().toString(36).slice(2,7).toUpperCase(),
+        name:"",
+        description:"",
+        features:{},
+        customFeatures:[],
+        layouts:[{ type:"Boardroom", capacity:0, default:true }],
+        baseRates:{ perHourExVAT:0, perHalfDayExVAT:0, perDayExVAT:0, minDurationMins:60, earliestStart:"07:00", latestEnd:"22:00" },
+        categoryId: defaultCat
+      };
+      state.rooms.push(rm); renderRooms(); saveDraft();
+    };
+
+    $("roomSearch").addEventListener("input", renderRooms);
+
+    function labelFromKey(key){
+      const entry = Object.entries(FEATURE_MAP).find(([label,k])=>k===key);
+      return entry? entry[0] : titleCase(String(key).replace(/_/g," "));
+    }
+    function migrate(data){
+      if (!data || typeof data!=="object") data={};
+      if (!Array.isArray(data.rooms)) data.rooms=[];
+
+      (data.rooms||[]).forEach(r=>{
+        r.id = r.id || "RM-"+Math.random().toString(36).slice(2,7).toUpperCase();
+        r.name = r.name || "";
+        r.description = r.description || "";
+        r.baseRates = r.baseRates || { perHourExVAT:0, perHalfDayExVAT:0, perDayExVAT:0, minDurationMins:60, earliestStart:"07:00", latestEnd:"22:00" };
+        if (Array.isArray(r.features)){
+          const obj={}; r.features.forEach(lbl=>{ const key = FEATURE_MAP[lbl] || snake(lbl); obj[key]=true; }); r.features = obj;
+        } else if (!r.features || typeof r.features!=="object"){ r.features = {}; }
+        if (!Array.isArray(r.customFeatures)) r.customFeatures = [];
+        const arr = Array.isArray(r.layouts)? r.layouts : [];
+        r.layouts = arr.map(it=>({ type: it.type || it.name || "Layout", capacity: parseInt(it.capacity,10)||0, default: !!it.default }));
+        let max=0; r.layouts.forEach(L=>{ const n=parseInt(L.capacity,10); if(isFinite(n)&&n>max) max=n; });
+        r.capacity = max;
+        if(!r.categoryId){
+          const catRoom = (state.categories||[]).find(c=>c.id==="CAT-ROOM");
+          if(catRoom) r.categoryId = catRoom.id;
+        }
+      });
+
+      data.pricing = data.pricing || { currency:"EUR", vatDefaults:{ room:0, fnb:23, av:23, staff:23 }, serviceChargePct:0, rounding:0.01 };
+      data.fees = data.fees || { depositPct:25, outOfHoursSurchargePct:0 };
+      data.labour = data.labour || { roles: [] };
+      data.categories = Array.isArray(data.categories)? data.categories : [];
+      data.copy = data.copy || { closingTitle:"Optional add-ons before checkout", closingLead:"You may also add:" };
+      data.vatRate = (typeof data.vatRate==="number")? data.vatRate : 23;
+      return data;
+    }
+
+    function chunkIntoColumns(arr, cols){
+      const out = Array.from({length: cols}, ()=>[]);
+      const n = Math.ceil(arr.length / cols);
+      for(let c=0;c<cols;c++){ out[c] = arr.slice(c*n, (c+1)*n); }
+      return out;
+    }
+
+    function renderRooms(){
+      const w=$("roomsWrap"); w.innerHTML="";
+      const q = String($("roomSearch").value||"").toLowerCase();
+      const catRoomExists = (state.categories||[]).some(c=>c.id==="CAT-ROOM");
+
+      (state.rooms||[]).forEach((r,i)=>{
+        if(q && String(r.name||"").toLowerCase().indexOf(q)===-1) return;
+
+        const div = document.createElement("div"); div.className="card";
+        div.innerHTML = `
+          <div class="card-c grid grid-2">
+            <div><label>Room name</label><input value="${r.name||""}" id="rn-${i}" placeholder="e.g., The Atrium"></div>
+            <div>
+              <label>Category ${catRoomExists ? "<span class='mut'>(fixed to Room)</span>" : ""}</label>
+              <select id="rc-${i}" ${catRoomExists ? "disabled" : ""}></select>
+            </div>
+          </div>
+
+          <div class="card-c">
+            <label>Description</label>
+            <textarea id="rd-${i}" placeholder="Short description…">${r.description||""}</textarea>
+          </div>
+
+          <div class="card-c features-wrap">
+            <div class="row"><b>Features</b><div class="spacer"></div></div>
+            <div class="help">Tick built‑in features or add your own. Custom are stored in <code>customFeatures</code>.</div>
+            <div class="features-cols" id="rfeat-cols-${i}"></div>
+            <div class="features-tools">
+              <input class="small" id="rfeat-in-${i}" placeholder="Add custom label… (Enter)">
+              <button class="btn small" id="rfeat-add-${i}" title="Add">Add custom</button>
+            </div>
+          </div>
+
+          <div class="card-c" style="background:#f8fafc">
+            <div class="row"><b>Layouts & capacities</b><div class="spacer"></div></div>
+            <div class="help">Set capacity per format (Boardroom, U‑Shape, etc.). Mark one as default.</div>
+            <table style="margin-top:8px">
+              <thead><tr><th>Default</th><th>Layout</th><th>Capacity</th><th></th></tr></thead>
+              <tbody id="rlay-${i}"></tbody>
+            </table>
+            <div class="features-tools">
+              <input class="small" style="width:340px" placeholder="Add layout name… (Enter)" id="rlay-in-${i}">
+              <button class="btn small" id="rlay-add-${i}" title="Add layout row">Add layout</button>
+              <button class="btn small" id="rlay-seed-${i}" title="Add common formats">Seed common</button>
+            </div>
+            <div class="inline" style="margin-top:8px">
+              <div><label>Max capacity (derived)</label><input id="rmax-${i}" disabled value="${r.capacity||0}" style="width:140px"></div>
+            </div>
+          </div>
+
+          <div class="card-c">
+            <div class="grid grid-3">
+              <div><label>Per hour Ex VAT</label><input type="number" step="0.01" id="rph-${i}" value="${r.baseRates?.perHourExVAT||0}"></div>
+              <div><label>Per half‑day Ex VAT</label><input type="number" step="0.01" id="rhd-${i}" value="${r.baseRates?.perHalfDayExVAT||0}"></div>
+              <div><label>Per day Ex VAT</label><input type="number" step="0.01" id="rpd-${i}" value="${r.baseRates?.perDayExVAT||0}"></div>
+              <div><label>Min duration (mins)</label><input type="number" step="1" id="rmin-${i}" value="${r.baseRates?.minDurationMins||60}"></div>
+              <div><label>Earliest start</label><input type="time" id="res-${i}" value="${r.baseRates?.earliestStart||"07:00"}"></div>
+              <div><label>Latest end</label><input type="time" id="rle-${i}" value="${r.baseRates?.latestEnd||"22:00"}"></div>
+            </div>
+          </div>
+
+          <div class="card-c row">
+            <button class="btn small" id="rdup-${i}">Duplicate</button>
+            <button class="btn small danger" id="rdel-${i}">Delete</button>
+            <div class="spacer"></div>
+            <span class="help">ID: ${r.id}</span>
+          </div>
+          <div class="card-c" id="rerrs-${i}" style="display:none"></div>
+        `;
+        w.appendChild(div);
+
+        // Category options (force CAT-ROOM if present)
+        const sel = $("rc-"+i);
+        let opts = state.categories||[];
+        if ((state.categories||[]).some(c=>c.id==="CAT-ROOM")){
+          opts = state.categories.filter(c=>c.id==="CAT-ROOM");
+          if(!r.categoryId) r.categoryId = "CAT-ROOM";
+        }
+        sel.innerHTML = "<option value=''>—</option>" + (opts).map(c=>`<option value="${c.id}">${c.name} (${c.id})</option>`).join("");
+        sel.value = r.categoryId || "";
+        sel.onchange = e=>{ r.categoryId = e.target.value; validateRoom(i); saveDraft(); };
+
+        $("rn-"+i).oninput = e=>{ r.name = e.target.value; validateRoom(i); saveDraft(); };
+        $("rd-"+i).oninput = e=>{ r.description = e.target.value; saveDraft(); };
+
+        const br = r.baseRates || (r.baseRates = { perHourExVAT:0, perHalfDayExVAT:0, perDayExVAT:0, minDurationMins:60, earliestStart:"07:00", latestEnd:"22:00" });
+        $("rph-"+i).oninput = e=>{ br.perHourExVAT = +e.target.value||0; saveDraft(); };
+        $("rhd-"+i).oninput = e=>{ br.perHalfDayExVAT = +e.target.value||0; saveDraft(); };
+        $("rpd-"+i).oninput = e=>{ br.perDayExVAT = +e.target.value||0; saveDraft(); };
+        $("rmin-"+i).oninput = e=>{ br.minDurationMins = parseInt(e.target.value,10)||0; saveDraft(); };
+        $("res-"+i).oninput = e=>{ br.earliestStart = e.target.value||"07:00"; saveDraft(); };
+        $("rle-"+i).oninput = e=>{ br.latestEnd = e.target.value||"22:00"; saveDraft(); };
+
+        function featureLabels(){
+          const labels = BUILT_IN_FEATURES.slice();
+          (r.customFeatures||[]).forEach(lbl=>{ if(!labels.includes(lbl)) labels.push(lbl); });
+          Object.keys(r.features||{}).forEach(k=>{ const label = Object.entries(FEATURE_MAP).find(([L,K])=>K===k)?.[0] || titleCase(String(k).replace(/_/g," ")); if(!labels.includes(label)) labels.push(label); });
+          return labels.sort((a,b)=>a.localeCompare(b));
+        }
+        function keyForLabel(label){ return FEATURE_MAP[label] || snake(label); }
+
+        function renderFeatures(){
+          const labels = featureLabels();
+          const cols = chunkIntoColumns(labels, 4);
+          const wrap = $("rfeat-cols-"+i); wrap.innerHTML="";
+          cols.forEach((col, ci)=>{
+            const colDiv = document.createElement("div");
+            colDiv.className = "features-col";
+            col.forEach(lbl=>{
+              const key = keyForLabel(lbl);
+              const id = "f-"+i+"-"+key;
+              const row = document.createElement("div");
+              row.className = "feature";
+              row.innerHTML = `<input type="checkbox" id="${id}"><label for="${id}">${lbl}</label>`;
+              const cb = row.querySelector("input");
+              cb.checked = !!(r.features && r.features[key]);
+              cb.onchange = ()=>{ r.features[key] = cb.checked; saveDraft(); };
+              colDiv.appendChild(row);
+            });
+            wrap.appendChild(colDiv);
+          });
+        }
+        renderFeatures();
+
+        $("rfeat-add-"+i).onclick = addFeature;
+        $("rfeat-in-"+i).addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addFeature(); } });
+        function addFeature(){
+          const el = $("rfeat-in-"+i);
+          const v = String(el.value||"").trim();
+          if (!v) return;
+          const lbl = titleCase(v);
+          if (!Array.isArray(r.customFeatures)) r.customFeatures = [];
+          if (!r.customFeatures.includes(lbl)) r.customFeatures.push(lbl);
+          el.value = "";
+          renderFeatures(); saveDraft();
+        }
+
+        function recalcMax(){
+          let max=0; (r.layouts||[]).forEach(L=>{ const n=parseInt(L.capacity,10); if(isFinite(n)&&n>max) max=n; });
+          r.capacity = max; $("rmax-"+i).value = max;
+        }
+
+        function renderLayouts(){
+          const tb = $("rlay-"+i); tb.innerHTML="";
+          (r.layouts||[]).forEach((L,ix)=>{
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td><div class="inline"><input type="radio" name="def-${i}" id="def-${i}-${ix}" ${L.default? "checked": ""}><span class="mut">Default</span></div></td>
+              <td><input id="lt-${i}-${ix}" value="${L.type||""}" placeholder="e.g., Boardroom"></td>
+              <td><input type="number" min="0" step="1" id="lc-${i}-${ix}" value="${L.capacity||0}"></td>
+              <td><button class="btn small danger" id="ld-${i}-${ix}" title="Remove row">Remove</button></td>
+            `;
+            tb.appendChild(tr);
+            $("def-"+i+"-"+ix).onchange = ()=>{ (r.layouts||[]).forEach((X,k)=>X.default = (k===ix)); validateRoom(i); saveDraft(); };
+            $("lt-"+i+"-"+ix).oninput = e=>{ L.type = titleCase(e.target.value||""); validateRoom(i); saveDraft(); };
+            $("lc-"+i+"-"+ix).oninput = e=>{ L.capacity = parseInt(e.target.value,10)||0; recalcMax(); validateRoom(i); saveDraft(); };
+            $("ld-"+i+"-"+ix).onclick = ()=>{ r.layouts.splice(ix,1); renderLayouts(); recalcMax(); validateRoom(i); saveDraft(); };
+          });
+        }
+        renderLayouts(); recalcMax();
+
+        $("rlay-add-"+i).onclick = addLayout;
+        $("rlay-in-"+i).addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addLayout(); } });
+        function addLayout(){
+          const inp = $("rlay-in-"+i);
+          const v = String(inp.value||"").trim();
+          if (!v) return;
+          const name = titleCase(v);
+          if (!r.layouts) r.layouts=[];
+          if (!r.layouts.some(x=>String(x.type||"").toLowerCase()===name.toLowerCase())) r.layouts.push({type:name, capacity:0, default: r.layouts.length===0});
+          inp.value="";
+          renderLayouts(); recalcMax(); validateRoom(i); saveDraft();
+        }
+        $("rlay-seed-"+i).onclick = ()=>{
+          r.layouts = r.layouts || [];
+          const have = r.layouts.map(x=>String(x.type||"").toLowerCase());
+          COMMON_LAYOUTS.forEach(L=>{ if(!have.includes(L.toLowerCase())) r.layouts.push({type:L, capacity:0}); });
+          if (!r.layouts.some(x=>x.default) && r.layouts.length) r.layouts[0].default = true;
+          renderLayouts(); recalcMax(); validateRoom(i); saveDraft();
+        };
+
+        $("rdup-"+i).onclick = ()=>{ const copy = deepClone(r); copy.id="RM-"+Math.random().toString(36).slice(2,7).toUpperCase(); copy.name = (r.name||"")+" (copy)"; state.rooms.splice(i+1,0,copy); renderRooms(); saveDraft(); };
+        $("rdel-"+i).onclick = ()=>{ if(confirm("Delete this room?")){ state.rooms.splice(i,1); renderRooms(); saveDraft(); } };
+
+        validateRoom(i);
+      });
+    }
+
+    function validateRoom(i){
+      const r = (state.rooms||[])[i]; if(!r) return;
+      const errs = [];
+      const nameI = $("rn-"+i);
+      const catI = $("rc-"+i);
+      const lArr = r.layouts||[];
+      const hasLayouts = lArr.length>0;
+      const hasDefault = lArr.some(x=>x.default);
+      const badCap = lArr.some(x=>!isFinite(parseInt(x.capacity,10)) || parseInt(x.capacity,10)<0);
+      const badType = lArr.some(x=>!x.type || !String(x.type).trim());
+
+      if (!r.name) errs.push("Room name is required.");
+      if (!r.categoryId) errs.push("Please choose a Category.");
+      if (!hasLayouts) errs.push("Add at least one layout.");
+      if (hasLayouts && !hasDefault) errs.push("Mark one layout as the default.");
+      if (badType) errs.push("Each layout needs a name (e.g., Boardroom).");
+      if (badCap) errs.push("Capacity must be 0 or higher (whole numbers).");
+
+      nameI.classList.toggle("invalid", !r.name);
+      catI.classList.toggle("invalid", !r.categoryId);
+
+      const box = $("rerrs-"+i);
+      if (errs.length){
+        box.style.display = "block";
+        box.className = "card-c errors";
+        box.innerHTML = "<b>Fix before publishing:</b><ul style='margin:6px 0 0 18px'>" + errs.map(e=>`<li>${e}</li>`).join("") + "</ul>";
+      } else {
+        box.style.display = "none";
+      }
+    }
+
+    // Pricing
+    function renderPricing(){
+      const p = state.pricing || (state.pricing = JSON.parse(JSON.stringify(initial.pricing)));
+      const f = state.fees || (state.fees = JSON.parse(JSON.stringify(initial.fees)));
+      $("cur").value = p.currency || "EUR";
+      $("vatDefaults").value = JSON.stringify(p.vatDefaults||{},null,2);
+      $("rounding").value = p.rounding ?? 0.01;
+      $("svc").value = p.serviceChargePct ?? 0;
+      $("dep").value = f.depositPct ?? 25;
+      $("ooh").value = f.outOfHoursSurchargePct ?? 0;
+
+      $("cur").oninput = e=>{ p.currency = e.target.value; saveDraft(); };
+      $("vatDefaults").oninput = e=>{
+        try{ p.vatDefaults = JSON.parse(e.target.value||"{}"); e.target.style.borderColor="var(--bd)"; }
+        catch{ e.target.style.borderColor="var(--danger)"; }
+        saveDraft();
+      };
+      $("rounding").oninput = e=>{ p.rounding = +e.target.value || 0.01; saveDraft(); };
+      $("svc").oninput = e=>{ p.serviceChargePct = +e.target.value || 0; saveDraft(); };
+      $("dep").oninput = e=>{ f.depositPct = +e.target.value || 0; saveDraft(); };
+      $("ooh").oninput = e=>{ f.outOfHoursSurchargePct = +e.target.value || 0; saveDraft(); };
+    }
+
+    function renderPreview(){ $("dump").textContent = JSON.stringify(state,null,2); }
+
+    function renderAll(){ renderRooms(); renderCategories(); renderPricing(); flashDraftBanner(); }
+    renderAll();
+  })();
+  </script>
+</body>
+</html>
