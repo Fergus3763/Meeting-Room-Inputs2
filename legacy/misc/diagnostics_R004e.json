@@ -1,0 +1,26 @@
+{
+  "build": "R004e",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+  "time": "2025-09-05T17:12:12.638Z",
+  "results": [
+    {
+      "ok": true,
+      "label": "JS runtime",
+      "detail": "Inline scripts executed"
+    },
+    {
+      "ok": true,
+      "label": "localStorage read/write",
+      "detail": "ok"
+    },
+    {
+      "ok": true,
+      "label": "Date/time support",
+      "detail": "ok"
+    }
+  ],
+  "lsSnapshot": {
+    "admin_draft_v2": 6713
+  },
+  "errors": []
+}

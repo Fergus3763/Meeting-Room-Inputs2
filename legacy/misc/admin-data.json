@@ -1,0 +1,81 @@
+{
+  "vatRate": 23,
+  "pricing": {
+    "currency": "EUR",
+    "vatDefaults": {
+      "room": 0,
+      "fnb": 23,
+      "av": 23,
+      "staff": 23
+    },
+    "serviceChargePct": 0,
+    "rounding": 0.01
+  },
+  "fees": {
+    "depositPct": 25,
+    "outOfHoursSurchargePct": 0
+  },
+  "labour": {
+    "roles": []
+  },
+  "rooms": [
+    {
+      "id": "RM-E7POU",
+      "name": "The Munster Room",
+      "description": "",
+      "features": {},
+      "customFeatures": [],
+      "layouts": [
+        {
+          "type": "Boardroom",
+          "capacity": 10,
+          "default": true
+        },
+        {
+          "type": "U-Shape",
+          "capacity": 16
+        },
+        {
+          "type": "Classroom",
+          "capacity": 24
+        },
+        {
+          "type": "Theatre",
+          "capacity": 0
+        },
+        {
+          "type": "Cabaret",
+          "capacity": 0
+        },
+        {
+          "type": "Banquet",
+          "capacity": 0
+        },
+        {
+          "type": "Hollow Square",
+          "capacity": 20
+        }
+      ],
+      "baseRates": {
+        "perHourExVAT": 0,
+        "perHalfDayExVAT": 0,
+        "perDayExVAT": 0,
+        "minDurationMins": 60,
+        "earliestStart": "07:00",
+        "latestEnd": "22:00"
+      },
+      "categoryId": "",
+      "capacity": 24
+    }
+  ],
+  "categories": [
+    {
+      "id": "CAT-POPC",
+      "name": ""
+    }
+  ],
+  "copy": {
+    "closingTitle": "Optional add-ons before checkout",
+    "closingLead": "You may also add:"
+  }
+}

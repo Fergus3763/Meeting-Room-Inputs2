@@ -1,0 +1,28 @@
+{
+  "vatRate": 23,
+  "pricing": {
+    "currency": "EUR",
+    "vatDefaults": {
+      "room": 0,
+      "fnb": 23,
+      "av": 23,
+      "staff": 23
+    },
+    "serviceChargePct": 0,
+    "rounding": 0.01
+  },
+  "fees": {
+    "depositPct": 25,
+    "outOfHoursSurchargePct": 0
+  },
+  "labour": {
+    "roles": []
+  },
+  "rooms": [],
+  "categories": [],
+  "copy": {
+    "closingTitle": "Optional add-ons before checkout",
+    "closingLead": "You may also add:"
+  },
+  "fixLog": []
+}

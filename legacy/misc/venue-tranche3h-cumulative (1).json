@@ -1,0 +1,103 @@
+
+{
+  "vatRate": 20,
+  "copy": {
+    "closingTitle": "Additional options you may want",
+    "closingLead": "You may also add:"
+  },
+  "rooms": [
+    {
+      "id": "RM-101",
+      "name": "Example Room",
+      "layouts": [
+        {
+          "type": "Boardroom",
+          "capacity": 14,
+          "default": true
+        },
+        {
+          "type": "Classroom",
+          "capacity": 24
+        },
+        {
+          "type": "U-Shape",
+          "capacity": 18
+        },
+        {
+          "type": "Theatre",
+          "capacity": 40
+        },
+        {
+          "type": "Banquet",
+          "capacity": 30
+        }
+      ],
+      "features": {
+        "naturalLight": true,
+        "view": true,
+        "aircon": true,
+        "accessible": true,
+        "notes": ""
+      }
+    }
+  ],
+  "categories": [
+    {
+      "id": "CAT-FNB",
+      "name": "Food & Beverage",
+      "sectionLabel": "F&B",
+      "sort": 10,
+      "showClosingUpsell": true,
+      "items": [
+        {
+          "id": "ADD-COF",
+          "name": "Coffee & Tea (refills)",
+          "categoryId": "CAT-FNB",
+          "inclusive": false,
+          "pricingMode": "simple",
+          "priceType": "per_person",
+          "unitName": "person",
+          "priceExVAT": 4.5,
+          "taxable": true,
+          "minQty": 0,
+          "maxQty": 0,
+          "step": 1,
+          "defaultSelected": false,
+          "showInMain": true,
+          "offerAtClosing": true,
+          "visibility": "public",
+          "publicLabel": "Coffee & Tea"
+        }
+      ]
+    },
+    {
+      "id": "CAT-AV",
+      "name": "Audio/Visual",
+      "sectionLabel": "AV",
+      "sort": 20,
+      "showClosingUpsell": true,
+      "items": [
+        {
+          "id": "ADD-PTZ",
+          "name": "PTZ Camera Kit",
+          "categoryId": "CAT-AV",
+          "inclusive": false,
+          "pricingMode": "hour_or_day",
+          "ratePerHourExVAT": 60,
+          "ratePerDayExVAT": 180,
+          "dayCapHours": 4,
+          "roundHoursUp": true,
+          "taxable": true,
+          "minQty": 0,
+          "maxQty": 1,
+          "step": 1,
+          "defaultSelected": false,
+          "showInMain": true,
+          "offerAtClosing": true,
+          "visibility": "public",
+          "publicLabel": "PTZ Camera Kit"
+        }
+      ]
+    }
+  ]
+}

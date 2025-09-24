@@ -1,0 +1,92 @@
+{
+  "vatRate": 23,
+  "pricing": {
+    "currency": "EUR",
+    "vatDefaults": {
+      "room": 0,
+      "fnb": 23,
+      "av": 23,
+      "staff": 23
+    },
+    "serviceChargePct": 0,
+    "rounding": 0.01
+  },
+  "fees": {
+    "depositPct": 25,
+    "outOfHoursSurchargePct": 0
+  },
+  "labour": {
+    "roles": []
+  },
+  "rooms": [
+    {
+      "id": "RM-65AV1",
+      "name": "",
+      "features": {},
+      "layouts": [
+        {
+          "type": "Boardroom",
+          "capacity": 10,
+          "default": true
+        }
+      ],
+      "baseRates": {
+        "perHourExVAT": 0,
+        "perHalfDayExVAT": 0,
+        "perDayExVAT": 0,
+        "minDurationMins": 60,
+        "earliestStart": "07:00",
+        "latestEnd": "22:00"
+      }
+    }
+  ],
+  "categories": [
+    {
+      "id": "CAT-FNB",
+      "name": "Food & Beverage",
+      "sectionLabel": "F&B",
+      "sort": 10,
+      "showClosingUpsell": true,
+      "items": [
+        {
+          "id": "ITM-COF",
+          "name": "Coffee & Tea (refills)",
+          "inclusive": false,
+          "pricingMode": "simple",
+          "priceType": "per_person",
+          "unitName": "person",
+          "priceExVAT": 4.5,
+          "taxable": true,
+          "step": 1,
+          "publicLabel": "Coffee & Tea"
+        }
+      ]
+    },
+    {
+      "id": "CAT-AV",
+      "name": "Audio/Visual",
+      "sectionLabel": "AV",
+      "sort": 20,
+      "showClosingUpsell": true,
+      "items": [
+        {
+          "id": "ITM-PTZ",
+          "name": "PTZ Camera Kit",
+          "inclusive": false,
+          "pricingMode": "hour_or_day",
+          "ratePerHourExVAT": 60,
+          "ratePerDayExVAT": 180,
+          "dayCapHours": 4,
+          "roundHoursUp": true,
+          "taxable": true,
+          "step": 1,
+          "publicLabel": "PTZ Camera Kit"
+        }
+      ]
+    }
+  ],
+  "copy": {
+    "closingTitle": "Optional add-ons before checkout",
+    "closingLead": "You may also add:"
+  }
+}

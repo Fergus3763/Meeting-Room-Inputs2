@@ -1,0 +1,106 @@
+{
+  "vatRate": 20,
+  "copy": {
+    "closingTitle": "Optional add-ons before checkout",
+    "closingLead": "You may also add:"
+  },
+  "categories": [
+    {
+      "id": "CAT-FNB",
+      "name": "Food & Beverage",
+      "sectionLabel": "F&B",
+      "sort": 10,
+      "showClosingUpsell": true,
+      "standards": [
+        {
+          "id": "STD-FIL",
+          "name": "Filtered water on the table"
+        }
+      ]
+    },
+    {
+      "id": "CAT-AV",
+      "name": "Audio/Visual",
+      "sectionLabel": "AV",
+      "sort": 20,
+      "showClosingUpsell": true,
+      "standards": [
+        {
+          "id": "STD-WIFI",
+          "name": "Wi-Fi included"
+        },
+        {
+          "id": "STD-38YI",
+          "name": ""
+        }
+      ]
+    }
+  ],
+  "extras": [
+    {
+      "id": "ADD-COF",
+      "pricingMode": "simple",
+      "name": "Coffee & Tea (refills)",
+      "categoryId": "CAT-FNB",
+      "priceType": "per_person",
+      "unitName": "person",
+      "priceExVAT": 4.5,
+      "taxable": true,
+      "minQty": 0,
+      "maxQty": 0,
+      "step": 1,
+      "defaultSelected": false,
+      "leadTimeHours": 0,
+      "cutoffHours": 0,
+      "showInMain": true,
+      "offerAtClosing": true,
+      "visibility": "public",
+      "publicLabel": "Coffee & Tea"
+    },
+    {
+      "id": "ADD-PTZ",
+      "pricingMode": "hour_or_day",
+      "name": "PTZ Camera Kit",
+      "categoryId": "CAT-AV",
+      "ratePerHourExVAT": 60,
+      "ratePerDayExVAT": 180,
+      "dayCapHours": 2,
+      "roundHoursUp": true,
+      "taxable": true,
+      "minQty": 0,
+      "maxQty": 1,
+      "step": 1,
+      "defaultSelected": false,
+      "leadTimeHours": 24,
+      "cutoffHours": 2,
+      "showInMain": true,
+      "offerAtClosing": true,
+      "visibility": "public",
+      "publicLabel": "PTZ Camera Kit"
+    },
+    {
+      "id": "ADD-QAJT",
+      "pricingMode": "hour_or_day",
+      "name": "lECTURN",
+      "categoryId": "CAT-AV",
+      "priceType": "per_item",
+      "unitName": "each",
+      "priceExVAT": 0,
+      "ratePerHourExVAT": 5,
+      "ratePerDayExVAT": 15,
+      "dayCapHours": 8,
+      "roundHoursUp": true,
+      "taxable": true,
+      "minQty": 0,
+      "maxQty": 0,
+      "step": 1,
+      "defaultSelected": false,
+      "leadTimeHours": 0,
+      "cutoffHours": 0,
+      "showInMain": true,
+      "offerAtClosing": true,
+      "visibility": "public",
+      "publicLabel": ""
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "rooms": [],
+  "categories": [
+    {
+      "id": "CAT-VU7L",
+      "name": ""
+    }
+  ],
+  "pricing": {
+    "currency": "EUR",
+    "vatDefaults": {
+      "room": 0,
+      "fnb": 23,
+      "av": 23,
+      "staff": 23
+    },
+    "rounding": 0.01,
+    "serviceChargePct": 0
+  },
+  "fees": {
+    "depositPct": 25,
+    "outOfHoursSurchargePct": 0
+  },
+  "vatRate": 23,
+  "fixLog": []
+}

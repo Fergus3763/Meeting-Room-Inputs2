@@ -1,0 +1,45 @@
+{
+  "rooms": [
+    {
+      "id": "ROOM-A4QK5U",
+      "name": "",
+      "unitName": "",
+      "capacity": 1,
+      "categoryId": "",
+      "description": "",
+      "features": [
+        "City View"
+      ]
+    }
+  ],
+  "categories": [],
+  "pricing": {
+    "currency": "EUR",
+    "vatDefaults": {
+      "room": 0,
+      "fnb": 23,
+      "av": 23,
+      "staff": 23
+    },
+    "serviceChargePct": 0,
+    "roundingStep": 0.01,
+    "depositPct": 0,
+    "outOfHoursPct": 0
+  },
+  "featureLibrary": [
+    "Projector",
+    "TV/Screen",
+    "Whiteboard",
+    "Flipchart",
+    "Conference phone",
+    "Natural light",
+    "AC/Heating",
+    "Wheelchair access",
+    "Stage/Podium",
+    "Breakout area",
+    "Catering allowed",
+    "Windows",
+    "Sound system",
+    "City View"
+  ]
+}
