@@ -2,7 +2,7 @@
 - build-002: index, _redirects
 - build-003: index, _redirects, admin-data-legacy.json
 # Recovery Log
-**Date:** (fill in)
+**Date:** (24/09/2025) Portal misc link verified; release created.”
 
 ## Summary
 - Kept one backup: `data/admin-data-BACKUP.json` (or dated file).
