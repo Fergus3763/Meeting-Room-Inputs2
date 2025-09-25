@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fergus3763.github.io/Meeting-Room-Inputs2/docs/schemas/addons.schema.json",
+  "title": "Amenity / Service Add-on Catalog",
+  "type": "object",
+  "properties": {
+    "version": { "type": "string" },
+    "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "pricingMode", "netPrice"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" },
+          "name": { "type": "string" },
+          "category": { "type": "string" },
+          "description": { "type": "string" },
+          "pricingMode": {
+            "type": "string",
+            "enum": ["perRoom", "perPerson", "perPeriod"]
+          },
+          "unitPeriodMins": {
+            "type": ["integer", "null"],
+            "minimum": 5,
+            "description": "Required if pricingMode = perPeriod"
+          },
+          "netPrice": { "type": "number", "minimum": 0 },
+          "taxCode": { "type": ["string", "null"] },
+
+          "includedByDefault": { "type": "boolean", "default": false },
+          "visibleToBooker": { "type": "boolean", "default": true },
+
+          "minQty": { "type": ["integer", "null"], "minimum": 0 },
+          "maxQty": { "type": ["integer", "null"], "minimum": 1 },
+          "stepQty": { "type": ["integer", "null"], "minimum": 1 },
+
+          "requires": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Addon ids that must also be selected"
+          },
+          "excludes": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Addon ids that cannot be selected together"
+          },
+
+          "active": { "type": "boolean", "default": true },
+          "sort": { "type": "integer", "default": 0 },
+          "notes": { "type": "string" }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "pricingMode": { "const": "perPeriod" } } },
+            "then": { "required": ["unitPeriodMins"] }
+          }
+        ]
+      }
+    }
+  },
+  "required": ["items", "currency"]
+}
