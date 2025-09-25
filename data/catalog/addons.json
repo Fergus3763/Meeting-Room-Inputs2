@@ -1,0 +1,43 @@
+{
+  "version": "v0.1",
+  "currency": "EUR",
+  "items": [
+    {
+      "id": "proj-hd",
+      "name": "Projector (HD)",
+      "category": "AV",
+      "pricingMode": "perPeriod",
+      "unitPeriodMins": 120,
+      "netPrice": 45,
+      "taxCode": "AV",
+      "includedByDefault": false,
+      "visibleToBooker": true,
+      "minQty": 0,
+      "maxQty": 2,
+      "stepQty": 1,
+      "notes": "Includes HDMI cable"
+    },
+    {
+      "id": "flipchart",
+      "name": "Flipchart & Markers",
+      "category": "Stationery",
+      "pricingMode": "perRoom",
+      "netPrice": 15,
+      "taxCode": "GEN",
+      "includedByDefault": true,
+      "visibleToBooker": false
+    },
+    {
+      "id": "coffee-break",
+      "name": "Coffee Break",
+      "category": "Catering",
+      "pricingMode": "perPerson",
+      "netPrice": 6.5,
+      "taxCode": "FNB",
+      "includedByDefault": false,
+      "visibleToBooker": true,
+      "minQty": 5,
+      "notes": "Coffee/tea & pastries"
+    }
+  ]
+}
