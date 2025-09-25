@@ -1,0 +1,21 @@
+Category,Item,Include? (4p/2h),Include? (12p/Half-Day),Include? (40p/1-Day),Pricing Unit,Example Price (EUR),Rationale / Notes
+Tech & Hybrid,One-touch VC room system (camera/mic/speaker),Include,Include,Upsell,per room / day,€0 (included) – €120/day,Removes friction for small/medium teams; include to boost conversion
+Tech & Hybrid,Auto-tracking PTZ camera,Upsell,Upsell,Include,per day,€120–€250/day,Better framing for hybrid/recording
+Tech & Hybrid,Hardware encoder + streaming (RTMP/SRT),Upsell,Upsell,Upsell,per event/day,"€350–€1,200/day","Value depends on platform, branding, bandwidth"
+Tech & Hybrid,Recording (ISO audio feed),Upsell,Upsell,Upsell,per half/full day,"€300 half / €600–€1,200 full",Deliver raw MP4 to client-provided drive/link
+Tech & Hybrid,Live captioning (CART),On request,Upsell,Upsell,per hour (per language),€120–€200/hr,Accessibility + searchable post-event assets
+Tech & Hybrid,Simultaneous interpretation (2 booths),N/A,On request,Upsell,per half/full day,"€600–€1,200/booth/day + interpreters",Partner vendor; pass-through + margin
+Tech & Hybrid,Additional wireless mics (beyond standard),N/A,Upsell,Upsell,per mic / day,€25–€60/day,Includes batteries/charging
+Tech & Hybrid,Seamless switcher/scaler,N/A,Upsell,Include,per day,€150–€350/day,For multi-laptop/presenters (40p)
+Tech & Hybrid,Confidence monitor on stage,N/A,Upsell,Include,per day,€60–€120/day,Presenter notes & timers
+Creative/Branding,Uplighting package (8–12 fixtures),Upsell,Upsell,Upsell,per package / day,€250–€500/day,Brand colour wash; wow-factor
+Creative/Branding,Custom gobo/logo projection,Upsell,Upsell,Upsell,setup + per day,€150 setup + €120/day,Reusable for repeat clients
+Creative/Branding,Stage backdrop/pipe & drape,N/A,Upsell,Upsell,per day (10–12 m),€250–€600/day,Improves look & acoustics
+Creative/Branding,Step-and-repeat photo wall,N/A,Upsell,Upsell,per day,€250–€700/day,Sponsor appeal; social content
+Creative/Branding,Slide design/polish (rapid),Upsell,Upsell,Upsell,per deck,€150–€400,Offer 24–48h service pre-event
+F&B,Barista coffee cart,Upsell,Upsell,Upsell,setup + per cup,€150 setup + €3–€5/coffee,High perceived value
+F&B,Premium teas & healthy snacks,Upsell,Upsell,Upsell,per person,€4–€9/pp,Dietary labels; plant-based options
+F&B,Smoothie/juice station,Upsell,Upsell,Upsell,per person or hour,€6–€12/pp,Great for morning half-days
+F&B,Hot buffet upgrade (vs. sandwich),N/A,Upsell,Upsell,per person,€12–€25/pp,Match to kitchen capacity
+F&B,Mocktail or cocktail hour,N/A,N/A,Upsell,per person,€10–€18/pp (mock) • €16–€28/pp (cocktail),Post-event networking
+Comfort/Productivity,Premium ergonomic chair upgrade,N/A,Upsell,Upsell,per chair / day,€3–€7/chair,Signal comfort for longer sessions
