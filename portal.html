@@ -156,5 +156,30 @@ Please read the Hub and confirm loaded; then continue with the task.`;
     .then(() => alert('Seed copied—open a NEW chat and paste it.'))
     .catch(() => alert('Could not copy automatically—please copy from the Hub.'));
 }
+</script><div id="hub-nag" style="display:none;margin:16px 0;padding:12px;border:1px solid #f0c36d;background:#fff8e1;border-radius:8px;">
+  <strong>Reminder:</strong> Hub / Snapshot may be stale. Please update HUB.md and take a new snapshot.
+</div>
+
+<script>
+(async function(){
+  try {
+    const res = await fetch('/Meeting-Room-Inputs2/data/heartbeat.json', { cache: 'no-store' });
+    if(!res.ok) return;
+    const hb = await res.json();
+    const now = new Date();
+    const hub = new Date(hb.hubISO);
+    const snap = new Date(hb.snapshotISO);
+    const ageHubHrs  = (now - hub)  / 36e5;
+    const ageSnapHrs = (now - snap) / 36e5;
+    const th = hb.thresholdHours || 36;
+
+    if (ageHubHrs > th || ageSnapHrs > th) {
+      document.getElementById('hub-nag').style.display = 'block';
+    }
+  } catch(e) {
+    // silent
+  }
+})();
 </script>
+
  </body></html>
