@@ -26,6 +26,18 @@
   <div class="grid">
     <div class="card">
       <h2>Live Admin Demo</h2>
+      <!-- Hand-off helpers -->
+<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+  <a class="btn" href="https://github.com/Fergus3763/Meeting-Room-Inputs2/blob/main/docs/HUB.md"
+     target="_blank" rel="noopener">
+    Open Hub (handover)
+  </a>
+
+  <a class="btn" href="#" onclick="copySpokeSeed(); return false;">
+    Copy Seed for new chat
+  </a>
+</div>
+
       <p><a href="https://github.com/Fergus3763/Meeting-Room-Inputs2/tree/main/legacy/misc" target="_blank" rel="noopener">Legacy Misc (JSON)</a></p>
       <p><a href="https://fergus3763.github.io/Meeting-Room-Inputs2/legacy/build-004/" target="_blank" rel="noopener">Legacy Build 004</a></p>
 <p><a href="https://fergus3763.github.io/Meeting-Room-Inputs2/legacy/build-005/" target="_blank" rel="noopener">Legacy Build 005</a></p>
@@ -134,4 +146,15 @@
   } catch { box.textContent = "Could not enumerate snapshots."; }
 })();
 </script>
-</body></html>
+ <script>
+function copySpokeSeed() {
+  const seed = `Hub: https://github.com/Fergus3763/Meeting-Room-Inputs2/blob/main/docs/HUB.md
+Portal: https://fergus3763.github.io/Meeting-Room-Inputs2/portal.html
+JSON: https://github.com/Fergus3763/Meeting-Room-Inputs2/blob/main/data/admin-data.json
+Please read the Hub and confirm loaded; then continue with the task.`;
+  navigator.clipboard.writeText(seed)
+    .then(() => alert('Seed copied—open a NEW chat and paste it.'))
+    .catch(() => alert('Could not copy automatically—please copy from the Hub.'));
+}
+</script>
+ </body></html>
