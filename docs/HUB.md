@@ -9,6 +9,7 @@
 
 **Status Block (last updated):**
 <paste the current Status Block from the Hub doc here>
+2025-09-25: Snapshot saved; heartbeat bumped; starting Integration/Parsing spoke.
 
 **Next 3 Tasks**
 <paste from Hub doc here>
