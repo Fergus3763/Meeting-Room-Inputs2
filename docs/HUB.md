@@ -1,4 +1,41 @@
 # Hotel Meetings SaaS — Project Hub (public)
+## Project Purpose & Scope (read first)
+
+**What we’re building**
+A hotel-facing, self-serve platform (SaaS) that lets venues publish **meeting rooms** with all pertinent data and variables and lets bookers configure and price them **end-to-end** (room, layouts, durations, included items, and paid add-ons like AV/F&B) **without human back-and-forth**.
+
+**Problem we’re solving**
+Meeting-room bookings are slow and labour-intensive because there are many variables and hidden rules. We are targeting the meeting room on-demand market, typically 1-30 persons. Hotels with multiple meeting/conference rooms will likely have property management system requring significant human interaction. this does not facilitate the on-demand/instant booker. Hotels will won’t adopt a second system, so our product must handle **all sizes** (2–20 core focus, but also legacy large rooms) and **complexity**, while still enabling quick, automated quotes for small teams.
+
+**Target users**
+- **Hotel/Venue Admins** — maintain room data, hours, pricing, included items, and optional add-ons (AV, F&B, services).
+- **Room Bookers** — configure a meeting and get a reliable, transparent price.
+
+**Owner & working style**
+- Product owner is **non-technical**. Please give **plain-English**, **2–3 step** instructions, with **exact paths/filenames** and copy-paste snippets.
+- Avoid jargon, no background work; surface every required action explicitly.
+
+**Scope (now)**
+- Canonical data in repo at `/data/admin-data.json` (snapshots in `/data/snapshots/YYYY-MM-DD/`).
+- Baseline UI served from `portal.html`, reading canonical JSON.
+- Add-ons catalog standardized in `/data/catalog/addons.json` (schema in `docs/schemas/addons.schema.json`).
+- Legacy deploys parked under `/legacy/` for reference only.
+
+**Out of scope (now)**
+- Payments, authentication, PMS/CRS integrations, multi-tenant billing.
+
+**Constraints / guardrails**
+- Keep **one canonical JSON** source of truth (`/data/admin-data.json`).
+- Every substantial change → snapshot to `/data/snapshots/YYYY-MM-DD/admin-data.json`.
+- Update `/data/heartbeat.json` so we can spot stale hubs.
+- Open an **Issue** for visible chunks of work; reference files and exact paths.
+
+**Success criteria (near-term)**
+- Baseline UI loads **only** from `/data/admin-data.json` (no stray/dated JSON).
+- Add-ons toggling (included vs optional) supported and priced correctly.
+- Hotels can maintain hours, capacities, pricing, and add-ons without code.
+
+---
 
 **Quick Links**
 - Portal (live): https://fergus3763.github.io/Meeting-Room-Inputs2/portal.html
