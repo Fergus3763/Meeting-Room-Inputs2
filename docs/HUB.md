@@ -5,7 +5,7 @@
 A hotel-facing, self-serve platform (SaaS) that lets venues publish **meeting rooms** with all pertinent data and variables and lets bookers configure and price them **end-to-end** (room, layouts, durations, included items, and paid add-ons like AV/F&B) **without human back-and-forth**.
 
 **Problem we’re solving**
-Meeting-room bookings are slow and labour-intensive because there are many variables and hidden rules. We are targeting the meeting room on-demand market, typically 1-30 persons. Hotels with multiple meeting/conference rooms will likely have property management system requring significant human interaction. this does not facilitate the on-demand/instant booker. Hotels will won’t adopt a second system, so our product must handle **all sizes** (2–20 core focus, but also legacy large rooms) and **complexity**, while still enabling quick, automated quotes for small teams.
+Meeting-room bookings are slow and labour-intensive because there are many variables and hidden rules. We are targeting the meeting room on-demand market, typically 1-30 persons. Hotels with multiple meeting/conference rooms will likely have property management system requring significant human interaction. This does not facilitate the on-demand/instant booker. Hotels will won’t adopt a second system, so our product must handle **all sizes** (2–20 core focus, but also legacy large rooms) and **complexity**, while still enabling quick, automated quotes for small teams.
 
 **Target users**
 - **Hotel/Venue Admins** — maintain room data, hours, pricing, included items, and optional add-ons (AV, F&B, services).
