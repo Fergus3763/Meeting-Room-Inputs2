@@ -90,6 +90,9 @@ async function fetchWithFallback(candidates) {
 }
 
 // Build candidate lists that work on GitHub Pages and locally
+    function bust(url) {
+  return url + (url.includes('?') ? '&' : '?') + 'v=' + Date.now();
+}
 function adminCandidates() {
   const repo = location.pathname.split('/').filter(Boolean)[0] || '';
   return [
