@@ -110,15 +110,15 @@ function addonsCandidates() {
   ].filter(Boolean);
 }
 
-// Replace the simple loaders with the fallback versions
+    // Replace the simple loaders with the fallback versions
 async function loadAdminJSON() {
   state.adminRaw = await fetchWithFallback(adminCandidates());
 }
+
 async function loadAddonsJSON() {
   try {
     state.addons = await fetchWithFallback(addonsCandidates());
   } catch (e) {
-    // optional/addons: allow UI to load even if missing
     console.warn('Add-ons load failed:', e);
     state.addons = null;
   }
