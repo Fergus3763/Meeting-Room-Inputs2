@@ -509,6 +509,16 @@
         "endsAt": "10/10/25 01:00",
         "createdAt": "2025-09-08T11:51:45.245Z",
         "status": "Confirmed"
+      },
+      {
+        "id": "BLK-1759236455249",
+        "roomId": "RM-101",
+        "type": "BLACKOUT",
+        "title": "Blackout",
+        "startAt": "",
+        "endAt": "",
+        "createdAt": "2025-09-30T12:47:35.249Z",
+        "status": "Confirmed"
       }
     ],
     "RM-7F90X": []
