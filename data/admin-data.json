@@ -479,48 +479,8 @@
     }
   ],
   "calendars": {
-    "RM-101": [
-      {
-        "id": "EVT-JXK8I4",
-        "roomId": "RM-101",
-        "type": "BLACKOUT",
-        "title": "Blackout",
-        "startsAt": "",
-        "endsAt": "",
-        "createdAt": "2025-09-07T15:53:01.902Z",
-        "status": "Confirmed"
-      },
-      {
-        "id": "EVT-P2VJGE",
-        "roomId": "RM-101",
-        "type": "BLACKOUT",
-        "title": "Blackout",
-        "startsAt": "",
-        "endsAt": "",
-        "createdAt": "2025-09-08T11:41:36.237Z",
-        "status": "Confirmed"
-      },
-      {
-        "id": "EVT-DQA69T",
-        "roomId": "RM-101",
-        "type": "BLACKOUT",
-        "title": "Hotel Renovations",
-        "startsAt": "1/10/25 00:00",
-        "endsAt": "10/10/25 01:00",
-        "createdAt": "2025-09-08T11:51:45.245Z",
-        "status": "Confirmed"
-      },
-      {
-        "id": "BLK-1759236455249",
-        "roomId": "RM-101",
-        "type": "BLACKOUT",
-        "title": "Blackout",
-        "startAt": "",
-        "endAt": "",
-        "createdAt": "2025-09-30T12:47:35.249Z",
-        "status": "Confirmed"
-      }
-    ],
-    "RM-7F90X": []
-  }
+  "RM-101": [],
+  "RM-7F90X": []
 }
+
+
