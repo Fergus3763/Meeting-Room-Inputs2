@@ -1,0 +1,526 @@
+{
+  "vatRate": 23,
+  "copy": {
+    "closingTitle": "Additional options you may want",
+    "closingLead": "You may also add:"
+  },
+  "pricing": {
+    "currency": "EUR",
+    "vatDefaults": {
+      "room": 0,
+      "fnb": 23,
+      "av": 23,
+      "staff": 23,
+      "services": 23
+    },
+    "serviceChargePct": 0,
+    "gratuityMode": "none",
+    "rounding": 0.01,
+    "roundingMode": "nearest",
+    "commissionPct": 0
+  },
+  "fees": {
+    "outOfHoursSurchargePct": 0,
+    "leadTimeRushHours": 48,
+    "rushFeePct": 0,
+    "flipFeeExVAT": 0,
+    "storageFeeExVAT": 0,
+    "depositPct": 25,
+    "cancellationPolicy": [
+      {
+        "fromDays": 9999,
+        "toDays": 30,
+        "chargePct": 0
+      },
+      {
+        "fromDays": 30,
+        "toDays": 7,
+        "chargePct": 50
+      },
+      {
+        "fromDays": 7,
+        "toDays": 0,
+        "chargePct": 100
+      }
+    ]
+  },
+  "discounts": {
+    "earlyBookingPct": 0,
+    "earlyBookingDays": 30,
+    "multiDayPct": 0,
+    "nonProfitPct": 0
+  },
+  "bundles": [],
+  "labour": {
+    "roles": []
+  },
+  "rooms": [
+    {
+      "id": "RM-101",
+      "name": "River room",
+      "layouts": [
+        {
+          "type": "Classroom",
+          "capacity": 18,
+          "default": false
+        },
+        {
+          "type": "U-Shape",
+          "capacity": 14,
+          "default": false
+        },
+        {
+          "type": "Theatre",
+          "capacity": 0,
+          "default": false
+        },
+        {
+          "type": "Banquet",
+          "capacity": 0,
+          "default": false
+        },
+        {
+          "type": "Reception",
+          "capacity": 30,
+          "default": false
+        },
+        {
+          "type": "Boardroom",
+          "capacity": 10,
+          "default": false
+        },
+        {
+          "type": "Square Shape",
+          "capacity": 16,
+          "default": false
+        }
+      ],
+      "features": {
+        "naturalLight": true,
+        "view": false,
+        "aircon": false,
+        "accessible": false
+      },
+      "baseRates": {
+        "perHourExVAT": 0,
+        "perHalfDayExVAT": 0,
+        "perDayExVAT": 0,
+        "bands": [],
+        "minDurationMins": 120,
+        "earliestStart": "07:00",
+        "latestEnd": "22:00",
+        "setupTeardownMins": 30,
+        "setupFeeExVAT": 20
+      },
+      "blackouts": [],
+      "categoryId": "CAT-ROOM",
+      "customFeatures": [],
+      "description": "Describe your room and why the booker should choose it. ",
+      "capacity": 30
+    },
+    {
+      "id": "RM-7F90X",
+      "name": "",
+      "description": "",
+      "layouts": [
+        {
+          "type": "Boardroom",
+          "capacity": 0,
+          "default": true
+        }
+      ],
+      "baseRates": {
+        "perHourExVAT": 0,
+        "perHalfDayExVAT": 0,
+        "perDayExVAT": 0
+      },
+      "earliestStart": "07:00",
+      "latestEnd": "22:00",
+      "capacity": 0
+    }
+  ],
+  "categories": [
+    {
+      "id": "CAT-ROOM",
+      "name": "Room",
+      "items": [
+        {
+          "id": "ITM-S777",
+          "name": "",
+          "publicLabel": "",
+          "inclusive": false,
+          "pricingMode": "simple",
+          "priceType": "per_item",
+          "unitName": "item",
+          "priceExVAT": 0,
+          "ratePerHourExVAT": 0,
+          "ratePerDayExVAT": 0,
+          "dayCapHours": 0,
+          "roundHoursUp": false,
+          "taxable": true,
+          "step": 1
+        }
+      ]
+    },
+    {
+      "id": "CAT-FNB",
+      "name": "Food & Beverage",
+      "sectionLabel": "F&B",
+      "sort": 10,
+      "showClosingUpsell": true,
+      "items": [
+        {
+          "id": "ADD-COF",
+          "name": "Coffee & Tea (refills)",
+          "categoryId": "CAT-FNB",
+          "inclusive": true,
+          "pricingMode": "simple",
+          "priceType": "per_person",
+          "unitName": "person",
+          "priceExVAT": 4.5,
+          "taxable": true,
+          "minQty": 0,
+          "maxQty": 0,
+          "step": 1,
+          "defaultSelected": false,
+          "showInMain": true,
+          "offerAtClosing": true,
+          "visibility": "public",
+          "publicLabel": "Coffee & Tea",
+          "costing": {
+            "cogsPerPersonExVAT": 1.2,
+            "wastagePct": 5,
+            "minCovers": 0,
+            "dietSurchargeExVAT": 0,
+            "cutoffHours": 12
+          }
+        },
+        {
+          "id": "ITM-YD6L63",
+          "name": "chilled water",
+          "categoryId": "CAT-FNB",
+          "inclusive": true,
+          "pricingMode": "simple",
+          "priceType": "per_item",
+          "unitName": "each",
+          "priceExVAT": 0,
+          "ratePerHourExVAT": 0,
+          "ratePerDayExVAT": 0,
+          "dayCapHours": 8,
+          "roundHoursUp": true,
+          "taxable": true,
+          "minQty": 0,
+          "maxQty": 0,
+          "step": 1,
+          "defaultSelected": false,
+          "showInMain": true,
+          "offerAtClosing": true,
+          "visibility": "public",
+          "publicLabel": "Chilled Water",
+          "costing": {}
+        },
+        {
+          "id": "ITM-S3UENR",
+          "name": "mineral water",
+          "categoryId": "CAT-FNB",
+          "inclusive": false,
+          "pricingMode": "simple",
+          "priceType": "per_person",
+          "unitName": "person",
+          "priceExVAT": 4,
+          "ratePerHourExVAT": 0,
+          "ratePerDayExVAT": 0,
+          "dayCapHours": 8,
+          "roundHoursUp": true,
+          "taxable": true,
+          "minQty": 0,
+          "maxQty": 0,
+          "step": 1,
+          "defaultSelected": false,
+          "showInMain": true,
+          "offerAtClosing": true,
+          "visibility": "public",
+          "publicLabel": "Mineral water",
+          "costing": {}
+        },
+        {
+          "id": "ITM-7A7OHG",
+          "name": "Pastries",
+          "categoryId": "CAT-FNB",
+          "inclusive": false,
+          "pricingMode": "simple",
+          "priceType": "per_person",
+          "unitName": "person",
+          "priceExVAT": 3,
+          "ratePerHourExVAT": 0,
+          "ratePerDayExVAT": 0,
+          "dayCapHours": 8,
+          "roundHoursUp": true,
+          "taxable": true,
+          "minQty": 0,
+          "maxQty": 0,
+          "step": 1,
+          "defaultSelected": false,
+          "showInMain": true,
+          "offerAtClosing": true,
+          "visibility": "public",
+          "publicLabel": "Pastries",
+          "costing": {}
+        },
+        {
+          "id": "ITM-GTDA",
+          "name": "F&B add‑on",
+          "inclusive": false,
+          "pricingMode": "simple",
+          "priceType": "per_person",
+          "unitName": "person",
+          "priceExVAT": 0,
+          "taxable": true
+        }
+      ]
+    },
+    {
+      "id": "CAT-AV",
+      "name": "Audio/Visual",
+      "sectionLabel": "AV",
+      "sort": 20,
+      "showClosingUpsell": true,
+      "items": [
+        {
+          "id": "ADD-PTZ",
+          "name": "PTZ Camera Kit",
+          "categoryId": "CAT-AV",
+          "inclusive": false,
+          "pricingMode": "hour_or_day",
+          "ratePerHourExVAT": 60,
+          "ratePerDayExVAT": 180,
+          "dayCapHours": 4,
+          "roundHoursUp": true,
+          "taxable": true,
+          "minQty": 0,
+          "maxQty": 1,
+          "step": 1,
+          "defaultSelected": false,
+          "showInMain": true,
+          "offerAtClosing": true,
+          "visibility": "public",
+          "publicLabel": "PTZ Camera Kit",
+          "costing": {
+            "ownership": "hire_in",
+            "vendorCostPerHour": 35,
+            "vendorCostPerDay": 110,
+            "deliveryFeeExVAT": 30,
+            "leadTimeDays": 2,
+            "markupMode": "percent",
+            "markupPct": 35,
+            "minSellExVAT": 160,
+            "passthrough": false,
+            "taxCode": "AV_STD"
+          }
+        },
+        {
+          "id": "ITM-T6DQ7V",
+          "name": "Lectern",
+          "categoryId": "CAT-AV",
+          "inclusive": true,
+          "pricingMode": "simple",
+          "priceType": "per_item",
+          "unitName": "each",
+          "priceExVAT": 0,
+          "taxable": true,
+          "minQty": 0,
+          "maxQty": 0,
+          "step": 1,
+          "defaultSelected": false,
+          "showInMain": true,
+          "offerAtClosing": true,
+          "visibility": "public",
+          "publicLabel": "Lectern",
+          "costing": {}
+        }
+      ]
+    },
+    {
+      "id": "CAT-SERVICES",
+      "name": "Services",
+      "sectionLabel": "Services",
+      "sort": 30,
+      "showClosingUpsell": true,
+      "items": [
+        {
+          "id": "ITM-QFSFGT",
+          "name": "Cloakroom",
+          "categoryId": "CAT-SERVICES",
+          "inclusive": true,
+          "pricingMode": "simple",
+          "priceType": "per_item",
+          "unitName": "each",
+          "priceExVAT": 0,
+          "ratePerHourExVAT": 0,
+          "ratePerDayExVAT": 0,
+          "dayCapHours": 8,
+          "roundHoursUp": true,
+          "taxable": true,
+          "minQty": 0,
+          "maxQty": 0,
+          "step": 1,
+          "defaultSelected": false,
+          "showInMain": true,
+          "offerAtClosing": true,
+          "visibility": "public",
+          "publicLabel": "Cloakroom",
+          "costing": {}
+        },
+        {
+          "id": "ITM-USLQP9",
+          "name": "Printing/Copying",
+          "categoryId": "CAT-SERVICES",
+          "inclusive": false,
+          "pricingMode": "simple",
+          "priceType": "per_item",
+          "unitName": "page",
+          "priceExVAT": 0.1,
+          "ratePerHourExVAT": 0,
+          "ratePerDayExVAT": 0,
+          "dayCapHours": 8,
+          "roundHoursUp": true,
+          "taxable": true,
+          "minQty": 0,
+          "maxQty": 0,
+          "step": 1,
+          "defaultSelected": false,
+          "showInMain": true,
+          "offerAtClosing": true,
+          "visibility": "public",
+          "publicLabel": "Printing",
+          "costing": {}
+        },
+        {
+          "id": "ITM-HSZSKT",
+          "name": "Digital Notice Board",
+          "categoryId": "CAT-SERVICES",
+          "inclusive": true,
+          "pricingMode": "simple",
+          "priceType": "per_item",
+          "unitName": "each",
+          "priceExVAT": 0,
+          "ratePerHourExVAT": 0,
+          "ratePerDayExVAT": 0,
+          "dayCapHours": 8,
+          "roundHoursUp": true,
+          "taxable": true,
+          "minQty": 0,
+          "maxQty": 0,
+          "step": 1,
+          "defaultSelected": false,
+          "showInMain": true,
+          "offerAtClosing": true,
+          "visibility": "public",
+          "publicLabel": "Notice Board",
+          "costing": {}
+        }
+      ]
+    }
+  ],
+  "fixLog": [
+    {
+      "id": "FIX-5CQM6W",
+      "title": "Copied tz & opening hours from RM-101 → all rooms",
+      "priority": "Immediate",
+      "createdAt": "2025-09-18T16:20:59.453Z"
+    },
+    {
+      "id": "FIX-H38MS3",
+      "title": "Synced calendars with rooms",
+      "priority": "Immediate",
+      "createdAt": "2025-09-18T16:20:43.049Z"
+    },
+    {
+      "id": "FIX-2XIZLZ",
+      "title": "Saved opening hours for RM-101",
+      "priority": "Immediate",
+      "createdAt": "2025-09-18T16:20:35.350Z"
+    },
+    {
+      "id": "FIX-7W83K2",
+      "title": "Synced calendars with rooms",
+      "priority": "Immediate",
+      "createdAt": "2025-09-18T16:16:53.805Z"
+    },
+    {
+      "id": "FIX-EQ23J6",
+      "title": "Saved opening hours for RM-101",
+      "priority": "Immediate",
+      "createdAt": "2025-09-08T13:25:53.741Z"
+    },
+    {
+      "id": "FIX-KHYICY",
+      "title": "Use European Date Format dd/mm/yyyy 00:00",
+      "area": "Availability",
+      "priority": "Future",
+      "status": "Open",
+      "createdAt": "2025-09-08T11:59:38.376Z"
+    },
+    {
+      "id": "FIX-Y8HPFB",
+      "title": "Add Applicable VAT RATE FIELD +A Save as Default Rate Radio button to ease workflow",
+      "area": "Rooms",
+      "status": "Open",
+      "details": "",
+      "createdAt": "2025-09-04T14:43:08.189Z"
+    },
+    {
+      "id": "FIX-EPINDY",
+      "title": "Allign correctly",
+      "area": "Rooms: Features",
+      "status": "Open",
+      "details": "",
+      "createdAt": "2025-09-04T14:41:31.710Z"
+    }
+  ],
+  "calendars": {
+    "RM-101": [
+      {
+        "id": "EVT-JXK8I4",
+        "roomId": "RM-101",
+        "type": "BLACKOUT",
+        "title": "Blackout",
+        "startsAt": "",
+        "endsAt": "",
+        "createdAt": "2025-09-07T15:53:01.902Z",
+        "status": "Confirmed"
+      },
+      {
+        "id": "EVT-P2VJGE",
+        "roomId": "RM-101",
+        "type": "BLACKOUT",
+        "title": "Blackout",
+        "startsAt": "",
+        "endsAt": "",
+        "createdAt": "2025-09-08T11:41:36.237Z",
+        "status": "Confirmed"
+      },
+      {
+        "id": "EVT-DQA69T",
+        "roomId": "RM-101",
+        "type": "BLACKOUT",
+        "title": "Hotel Renovations",
+        "startsAt": "1/10/25 00:00",
+        "endsAt": "10/10/25 01:00",
+        "createdAt": "2025-09-08T11:51:45.245Z",
+        "status": "Confirmed"
+      },
+      {
+        "id": "BLK-1759236455249",
+        "roomId": "RM-101",
+        "type": "BLACKOUT",
+        "title": "Blackout",
+        "startAt": "",
+        "endAt": "",
+        "createdAt": "2025-09-30T12:47:35.249Z",
+        "status": "Confirmed"
+      }
+    ],
+    "RM-7F90X": []
+  }
+}
