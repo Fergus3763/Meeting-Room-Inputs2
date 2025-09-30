@@ -1,1 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Portal → Live Admin Demo — Spoke Admin Superview</title>
+  <style>
+    :root{
+      --bg:#0f1220; --panel:#171a2b; --muted:#8b90a8; --text:#e8ebff; --accent:#7aa2ff; --danger:#ff7a7a; --ok:#66d9a8; --warn:#ffc36b; --line:#22263d;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    header{position:sticky;top:0;background:linear-gradient(180deg,#0f1220 60%,#0f122000);padding:16px 20px;border-bottom:1px solid var(--line);z-index:10}
+    .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .brand{font-weight:700;letter-spacing:.25px}
+    .muted{color:var(--muted)}
+    .wrap{max-width:1200px;margin:0 auto;padding:16px}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .tab{padding:8px 12px;border:1px solid var(--line);border-bottom:2px solid transparent;border-radius:10px;background:var(--panel);cursor:pointer;display:flex;align-items:center;gap:8px}
+    .tab.active{border-bottom-color:var(--accent);box-shadow:0 0 0 1px #0004 inset}
+    .badge{font-size:12px;padding:2px 6px;border-radius:999px;background:#ffffff12;border:1px solid var(--line)}
+    .badge.warn{color:var(--warn);border-color:#855b1a;background:#855b1a22}
+    .badge.danger{color:var(--danger);border-color:#6b1e1e;background:#6b1e1e22}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+    section.panel{grid-column:1/-1;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+    h2{margin:2px 0 8px 0;font-size:18px}
+    h3{margin:14px 0 8px 0;font-size:16px}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{color:var(--muted);text-align:left;font-weight:600}
+    tr:last-child td{border-bottom:none}
+    code,pre{background:#0b0e1a;border:1px solid var(--line);padding:8px;border-radius:10px;overflow:auto}
+    .kvs{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+    .kv{background:#0b0e1a;border:1px solid var(--line);border-radius:12px;padding:10px}
+    .kv .k{color:var(--muted);font-size:12px}
+    .kv .v{font-weight:600}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    button, .btn{background:#1e2342;color:var(--text);border:1px solid var(--line);padding:8px 12px;border-radius:10px;cursor:pointer}
+    button.primary{background:linear-gradient(180deg,#2b356b,#1f2550);border-color:#3a4696}
+    input, select, textarea{background:#0b0e1a;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+    .rowline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .pill{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:#ffffff10;font-size:12px}
+    .pill.bad{color:var(--danger);border-color:#6b1e1e;background:#6b1e1e22}
+    .pill.good{color:var(--ok);border-color:#1e6b4a;background:#1e6b4a22}
+    .hint{font-size:12px;color:var(--muted)}
+    .two{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
+    .scroll{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+    .list{list-style:none;margin:0;padding:0}
+    .list li{padding:10px;border-bottom:1px solid var(--line)}
+    .list li:last-child{border-bottom:none}
+    .warnline{border-left:3px solid var(--warn);padding-left:8px}
+    .dangerline{border-left:3px solid var(--danger);padding-left:8px}
+    .footer{opacity:.8;margin-top:8px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="row">
+        <div class="brand">Spoke Admin Superview</div>
+        <div class="muted">Portal → Live Admin Demo</div>
+        <div style="flex:1"></div>
+        <div class="controls">
+          <button id="exportBtn" class="primary">Export JSON</button>
+          <span class="hint">In‑memory only. Downloads current working copy.</span>
+        </div>
+      </div>
+      <div class="tabs" id="tabs"></div>
+    </div>
+  </header>
 
+  <main class="wrap">
+    <div id="content"></div>
+  </main>
+
+  <script>
+  // ======== Config ========
+  const TZ_DEFAULT = 'Europe/Dublin';
+  const PATH_ADMIN = '/data/admin-data.json';
+  const PATH_ADDONS = '/data/catalog/addons.json';
+  const PATH_ADDONS_SCHEMA = '/docs/schemas/addons.schema.json'; // optional for display only
+
+  // ======== Global state (in-memory working copy) ========
+  const state = {
+    adminRaw: null,            // canonical model as loaded
+    admin: null,               // mutable working copy
+    addons: null,
+    warnings: {overview:0, rooms:0, calendar:0, pricing:0, addons:0, raw:0},
+    fixLog: [],                // strings describing auto-fixes/flags
+    visitedPaths: new Set(),   // track mapped fields
+    unmappedPaths: [],         // computed
+  };
+
+  // ======== Utilities ========
+  const fmt = {
+    dt(s){
+      if(!s) return '—';
+      try{ const d = new Date(s); return new Intl.DateTimeFormat('en-IE',{dateStyle:'medium', timeStyle:'short', timeZone:TZ_DEFAULT}).format(d) + ` (${TZ_DEFAULT})`; }catch(e){ return String(s); }
+    },
+    bool(v){ return v ? 'Yes' : 'No'; },
+  };
+
+  function deepClone(v){ return JSON.parse(JSON.stringify(v)); }
+
+  function pathJoin(base, key){ return base ? base + '.' + key : String(key); }
+
+  function walk(obj, cb, base=''){
+    if (obj && typeof obj === 'object'){
+      if (Array.isArray(obj)){
+        obj.forEach((v,i)=>walk(v, cb, pathJoin(base, i)));
+      } else {
+        Object.keys(obj).forEach(k=>{
+          const p = pathJoin(base, k);
+          cb(p, obj[k]);
+          walk(obj[k], cb, p);
+        });
+      }
+    }
+  }
+
+  function markVisited(path){ state.visitedPaths.add(path); }
+
+  function computeUnmapped(){
+    const all = [];
+    walk(state.admin, (p)=> all.push(p));
+    const mappedRoots = new Set([...state.visitedPaths].map(p=>p.split('.')[0]));
+    state.unmappedPaths = all.filter(p=> !state.visitedPaths.has(p) && !p.match(/^\\d+(\\.|$)/));
+  }
+
+  function addFix(message){ state.fixLog.push(message); }
+
+  function downloadJSON(filename, data){
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function setTabBadge(id, count, type='warn'){
+    const el = document.querySelector(`.tab[data-id="${id}"] .badge`);
+    if(!el) return; el.textContent = count; el.className = `badge ${count>0?type:''}`;
+  }
+
+  // ======== Data Loading ========
+  async function loadJSON(path){
+    // Try absolute path first, then relative (for local file usage under /portal/)
+    const tryPaths = [path, '.'+path];
+    for (const p of tryPaths){
+      try{
+        const res = await fetch(p, {cache:'no-store'});
+        if(res.ok){ return await res.json(); }
+      }catch(e){ /* continue */ }
+    }
+    throw new Error('Failed to load '+path+' — ensure this HTML is served from repo root or /portal/.');
+  }
+
+  async function init(){
+    try{
+      const [admin, addons] = await Promise.all([
+        loadJSON(PATH_ADMIN),
+        loadJSON(PATH_ADDONS).catch(()=>null),
+      ]);
+      state.adminRaw = deepClone(admin);
+      state.admin = deepClone(admin);
+      state.addons = addons;
+      renderApp();
+    }catch(e){
+      document.getElementById('content').innerHTML = `<section class="panel"><h2>Load Error</h2><div class="dangerline">${e.message}</div><p class="hint">Check file paths and repo layout. Expected <code>${PATH_ADMIN}</code> and <code>${PATH_ADDONS}</code>.</p></section>`;
+      console.error(e);
+    }
+  }
+
+  // ======== UI: Tabs ========
+  const TAB_ORDER = [
+    {id:'overview', label:'Overview'},
+    {id:'rooms', label:'Rooms & Details'},
+    {id:'calendar', label:'Availability & Calendar'},
+    {id:'pricing', label:'Pricing'},
+    {id:'addons', label:'Add-ons'},
+    {id:'raw', label:'Raw JSON & Validation'},
+    {id:'fixlog', label:'Fix Log (read-only)'},
+  ];
+
+  function renderTabs(active='overview'){
+    const tabs = document.getElementById('tabs');
+    tabs.innerHTML = '';
+    TAB_ORDER.forEach(t=>{
+      const el = document.createElement('div');
+      el.className = 'tab'+(t.id===active?' active':'');
+      el.dataset.id = t.id;
+      el.innerHTML = `<span>${t.label}</span><span class="badge">0</span>`;
+      el.onclick = ()=>{ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); el.classList.add('active'); renderTab(t.id); };
+      tabs.appendChild(el);
+    });
+  }
+
+  function renderApp(){
+    renderTabs('overview');
+    bindHeader();
+    renderTab('overview');
+  }
+
+  function bindHeader(){
+    document.getElementById('exportBtn').onclick = ()=>{
+      downloadJSON('admin-data-export.json', state.admin);
+    };
+  }
+
+  // ======== Renderers ========
+  function renderTab(id){
+    const c = document.getElementById('content');
+    c.innerHTML = '';
+    if(!state.admin) return;
+    // reset visit tracking per render to recompute unmapped
+    state.visitedPaths.clear();
+
+    switch(id){
+      case 'overview': return renderOverview(c);
+      case 'rooms': return renderRooms(c);
+      case 'calendar': return renderCalendar(c);
+      case 'pricing': return renderPricing(c);
+      case 'addons': return renderAddons(c);
+      case 'raw': return renderRaw(c);
+      case 'fixlog': return renderFixLog(c);
+    }
+  }
+
+  // ---- Overview ----
+  function renderOverview(c){
+    const a = state.admin;
+    // heuristic counts (robust to different shapes)
+    const roomsArr = Array.isArray(a.rooms) ? a.rooms : (a.rooms && typeof a.rooms==='object' ? Object.values(a.rooms) : []);
+    markVisited('rooms');
+
+    const calendars = a.calendars || {};
+    markVisited('calendars');
+
+    const blackoutIssues = countInvalidBlackouts(calendars);
+
+    const lastSnapshot = a.lastSnapshotAt || a.updatedAt || a.generatedAt || null;
+    if(lastSnapshot) markVisited('lastSnapshotAt');
+
+    c.appendChild(panelHTML(`
+      <h2>Overview</h2>
+      <div class="kvs">
+        <div class="kv"><div class="k">Rooms</div><div class="v">${roomsArr.length}</div></div>
+        <div class="kv"><div class="k">Rooms with calendars</div><div class="v">${Object.keys(calendars).length}</div></div>
+        <div class="kv"><div class="k">Blackout warnings</div><div class="v">${blackoutIssues}</div></div>
+        <div class="kv"><div class="k">Last snapshot</div><div class="v">${fmt.dt(lastSnapshot)}</div></div>
+      </div>
+      <p class="hint">Counts are derived directly from <code>${PATH_ADMIN}</code>. Unknown fields remain visible in <b>Raw JSON & Validation</b>.</p>
+    `));
+
+    setTabBadge('overview', blackoutIssues + 0, blackoutIssues? 'warn':'');
+  }
+
+  // ---- Rooms & Details (EDITOR) ----
+  function renderRooms(c){
+    const a = state.admin;
+    // Normalize rooms into an array for editing
+    let roomsArr = [];
+    let roomsMap = null;
+    if (Array.isArray(a.rooms)) { roomsArr = a.rooms; }
+    else if (a.rooms && typeof a.rooms === 'object') { roomsMap = a.rooms; roomsArr = Object.entries(a.rooms).map(([k,v])=>({__key:k, ...v})); }
+    else { a.rooms = []; roomsArr = a.rooms; }
+    markVisited('rooms');
+
+    const wrap = document.createElement('section');
+    wrap.className = 'panel';
+    wrap.innerHTML = `<h2>Rooms & Details</h2><p class="hint">Everything you can edit here is <b>LIVE in UI</b>. If a field is not visible here, it is <b>Not Live</b> (see Unmapped).</p>`;
+
+    const table = document.createElement('table');
+    table.innerHTML = `<thead><tr>
+      <th style="width:220px">Room</th>
+      <th>Features</th>
+      <th>Capacities by layout</th>
+      <th>Weekly Hours (read-only)</th>
+      <th>Actions</th>
+    </tr></thead><tbody></tbody>`;
+
+    function ensureRoomShape(r){
+      if (!r.id) r.id = r.roomId || `RM-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}`;
+      if (!r.name) r.name = r.id;
+      if (!Array.isArray(r.features)) r.features = r.features ? [].concat(r.features) : [];
+      if (!r.capacities || typeof r.capacities !== 'object') r.capacities = {};
+      return r;
+    }
+
+    roomsArr.forEach((room, idx)=>{
+      const r = ensureRoomShape(room);
+      const tr = document.createElement('tr');
+
+      // --- Room column (editable name) ---
+      const tdRoom = document.createElement('td');
+      const nameInput = document.createElement('input'); nameInput.value = r.name || '';
+      nameInput.onchange = ()=>{ r.name = nameInput.value; };
+      tdRoom.appendChild(nameInput);
+      tdRoom.innerHTML += `<div class="hint">ID: ${r.id}</div>`;
+
+      // --- Features column (editable list) ---
+      const tdFeat = document.createElement('td');
+      const featList = document.createElement('div'); featList.className='rowline';
+      function rerenderFeatures(){
+        featList.innerHTML='';
+        r.features.forEach((f,i)=>{
+          const chip = document.createElement('span'); chip.className='pill'; chip.textContent=f;
+          const del = document.createElement('button'); del.textContent='×'; del.className='btn'; del.style.marginLeft='6px'; del.onclick=()=>{ r.features.splice(i,1); rerenderFeatures(); };
+          const wrapChip = document.createElement('span'); wrapChip.appendChild(chip); wrapChip.appendChild(del); featList.appendChild(wrapChip);
+        });
+      }
+      const featAddWrap = document.createElement('div'); featAddWrap.className='rowline'; featAddWrap.style.marginTop='8px';
+      const featInput = document.createElement('input'); featInput.placeholder='Add another feature';
+      const featBtn = document.createElement('button'); featBtn.className='btn'; featBtn.textContent='Add';
+      featBtn.onclick = ()=>{ if(featInput.value.trim()){ r.features.push(featInput.value.trim()); featInput.value=''; rerenderFeatures(); } };
+      featAddWrap.appendChild(featInput); featAddWrap.appendChild(featBtn);
+      rerenderFeatures();
+      tdFeat.appendChild(featList); tdFeat.appendChild(featAddWrap);
+
+      // --- Capacities column (editable map layout->number) ---
+      const tdCap = document.createElement('td');
+      const capWrap = document.createElement('div'); capWrap.className='rowline'; capWrap.style.flexWrap='wrap';
+      function rerenderCaps(){
+        capWrap.innerHTML='';
+        Object.entries(r.capacities).forEach(([layout,val])=>{
+          const capChip = document.createElement('span'); capChip.className='pill'; capChip.textContent = `${layout}: ${val}`;
+          const del = document.createElement('button'); del.textContent='×'; del.className='btn'; del.style.marginLeft='6px'; del.onclick=()=>{ delete r.capacities[layout]; rerenderCaps(); };
+          const wrapChip = document.createElement('span'); wrapChip.appendChild(capChip); wrapChip.appendChild(del); capWrap.appendChild(wrapChip);
+        });
+      }
+      const capAdd = document.createElement('div'); capAdd.className='rowline'; capAdd.style.marginTop='8px';
+      const layoutInput = document.createElement('input'); layoutInput.placeholder='Layout (e.g., Boardroom)';
+      const sizeInput = document.createElement('input'); sizeInput.type='number'; sizeInput.placeholder='Capacity'; sizeInput.min='0'; sizeInput.style.width='120px';
+      const addCapBtn = document.createElement('button'); addCapBtn.className='btn'; addCapBtn.textContent='Add layout capacity';
+      addCapBtn.onclick = ()=>{
+        const L = (layoutInput.value||'').trim(); const N = Number(sizeInput.value);
+        if(!L || !Number.isFinite(N)) return;
+        r.capacities[L] = N; layoutInput.value=''; sizeInput.value=''; rerenderCaps();
+      };
+      rerenderCaps();
+      capAdd.appendChild(layoutInput); capAdd.appendChild(sizeInput); capAdd.appendChild(addCapBtn);
+      tdCap.appendChild(capWrap); tdCap.appendChild(capAdd);
+
+      // --- Weekly hours (read-only view from existing mapping) ---
+      const tdWeekly = document.createElement('td');
+      const weekly = findWeeklyForRoom(state.admin, r.id);
+      tdWeekly.innerHTML = weekly ? renderWeekly(weekly) : '<span class="muted">No weekly hours mapped</span>';
+
+      // --- Actions ---
+      const tdAct = document.createElement('td');
+      const delBtn = document.createElement('button'); delBtn.className='btn'; delBtn.textContent='Delete room';
+      delBtn.onclick = ()=>{ if (roomsMap){ delete a.rooms[r.__key]; } else { const ix = a.rooms.indexOf(room); if(ix>-1) a.rooms.splice(ix,1); } addFix(`Deleted room ${r.id} (in-memory)`); renderTab('rooms'); };
+      tdAct.appendChild(delBtn);
+
+      tr.appendChild(tdRoom); tr.appendChild(tdFeat); tr.appendChild(tdCap); tr.appendChild(tdWeekly); tr.appendChild(tdAct);
+      table.querySelector('tbody').appendChild(tr);
+    });
+
+    // Add Another Room
+    const addBar = document.createElement('div'); addBar.className='rowline'; addBar.style.marginTop='12px';
+    const nameNew = document.createElement('input'); nameNew.placeholder='Room Name';
+    const addRoomBtn = document.createElement('button'); addRoomBtn.className='primary'; addRoomBtn.textContent='Add Another Room';
+    addRoomBtn.onclick = ()=>{
+      const base = { name: nameNew.value || `Room ${roomsArr.length+1}`, capacities:{}, features:[] };
+      if (roomsMap){ const id = `RM-${Date.now().toString(36)}`; a.rooms[id] = { id, ...base }; }
+      else { a.rooms.push({ id:`RM-${Date.now().toString(36)}`, ...base }); }
+      addFix(`Added room '${base.name}' (in-memory)`);
+      renderTab('rooms');
+    };
+    addBar.appendChild(nameNew); addBar.appendChild(addRoomBtn);
+
+    wrap.appendChild(table);
+    wrap.appendChild(addBar);
+    c.appendChild(wrap);
+  }
+
+  function renderKVList(obj){
+    if(!obj || typeof obj!=='object') return '—';
+    return `<div class="rowline">${Object.entries(obj).map(([k,v])=>`<span class="pill">${k}: ${v}</span>`).join(' ')}</div>`;
+  }
+
+  function renderWeekly(weekly){
+    // weekly can be object {Mon:["09:00-17:00"], ...} or array; show generically
+    if(!weekly || typeof weekly!=='object') return '—';
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    return `<table><tbody>${days.map(d=>{
+      const v = weekly[d] || weekly[d.toLowerCase()] || weekly[d.toUpperCase()] || [];
+      const arr = Array.isArray(v)? v : (typeof v==='string'? [v]: []);
+      return `<tr><th style="width:90px">${d}</th><td>${arr.length? arr.map(r=>`<span class="pill">${r}</span>`).join(' '):'<span class="muted">Closed</span>'}</td></tr>`
+    }).join('')}</tbody></table>`;
+  }
+
+  // ---- Availability & Calendar ----
+  function countInvalidBlackouts(calendars){
+    let n=0; Object.values(calendars||{}).forEach(list=>{
+      (list||[]).forEach(ev=>{ if((ev.type||'').toUpperCase()==='BLACKOUT'){
+        const bad = !ev.startAt || !ev.endAt;
+        if(bad) n++;
+      }});
+    }); return n;
+  }
+
+  function renderCalendar(c){
+    const a = state.admin;
+    const calendars = a.calendars || {};
+    markVisited('calendars');
+
+    const warnCount = countInvalidBlackouts(calendars);
+    setTabBadge('calendar', warnCount, warnCount? 'warn':'');
+
+    const container = document.createElement('div');
+    container.className = 'grid';
+
+    // Summary panel
+    const summary = document.createElement('div');
+    summary.className = 'panel';
+    summary.innerHTML = `
+      <h2>Availability & Calendar</h2>
+      <div class="kvs">
+        <div class="kv"><div class="k">Rooms with calendar</div><div class="v">${Object.keys(calendars).length}</div></div>
+        <div class="kv"><div class="k">Blackout warnings</div><div class="v">${warnCount}</div></div>
+      </div>
+      <p class="hint">Blackouts are parsed from <code>calendars[roomId][*].type === 'BLACKOUT'</code>. Empty <code>startAt</code> or <code>endAt</code> are flagged, not discarded.</p>
+    `;
+    container.appendChild(summary);
+
+    // Per-room panels
+    Object.entries(calendars).forEach(([roomId, events])=>{
+      const panel = document.createElement('section');
+      panel.className = 'panel two';
+
+      // Left: Blackouts list (editable)
+      const left = document.createElement('div');
+      left.innerHTML = `<h3>Room ${roomId} — Blackouts</h3>`;
+      const list = document.createElement('div');
+      list.className = 'scroll';
+      const ul = document.createElement('ul');
+      ul.className = 'list';
+
+      const blackouts = (events||[]).filter(ev=> (ev.type||'').toUpperCase()==='BLACKOUT');
+
+      blackouts.forEach((ev, idx)=>{
+        const li = document.createElement('li');
+        const bad = !ev.startAt || !ev.endAt;
+        li.innerHTML = `
+          <div class="row" style="justify-content:space-between">
+            <div>${ev.title||'Blackout'} <span class="pill">${ev.status||'—'}</span> ${bad?'<span class="pill bad">Invalid range</span>':''}</div>
+            <div class="controls"><button class="btn" data-act="del">Delete</button></div>
+          </div>
+          <div class="rowline" style="margin-top:8px">
+            <label>Start <input type="datetime-local" data-k="startAt" value="${toLocalInput(ev.startAt)}"></label>
+            <label>End <input type="datetime-local" data-k="endAt" value="${toLocalInput(ev.endAt)}"></label>
+            <label>Title <input type="text" data-k="title" value="${ev.title||''}"></label>
+          </div>
+          <div class="hint">ID: ${ev.id||'—'} • Created: ${fmt.dt(ev.createdAt)} • Stored: ISO8601 (${TZ_DEFAULT} shown)</div>
+        `;
+        // Bind changes
+        li.querySelectorAll('input').forEach(inp=>{
+          inp.onchange = ()=>{
+            const k = inp.dataset.k;
+            if(k==='startAt' || k==='endAt'){
+              const iso = fromLocalInput(inp.value);
+              ev[k] = iso || '';
+              if(!iso){ addFix(`Empty ${k} edited for ${roomId} → flagged as invalid`); }
+            } else { ev[k] = inp.value; }
+            // show live invalid pill
+            const badNow = !ev.startAt || !ev.endAt;
+            if(badNow && !li.querySelector('.pill.bad')){
+              const d = document.createElement('span'); d.className='pill bad'; d.textContent='Invalid range';
+              li.querySelector('.row').appendChild(d);
+            }
+          };
+        });
+        li.querySelector('[data-act="del"]').onclick = ()=>{
+          const ix = events.indexOf(ev);
+          if(ix>-1){ events.splice(ix,1); addFix(`Deleted blackout ${ev.id||''} for ${roomId} (in-memory only)`); li.remove(); }
+        };
+        ul.appendChild(li);
+      });
+
+      list.appendChild(ul);
+      left.appendChild(list);
+
+      // Add new blackout
+      const addRow = document.createElement('div');
+      addRow.className = 'rowline';
+      addRow.style.marginTop = '10px';
+      addRow.innerHTML = `
+        <label>Start <input type="datetime-local" id="addStart_${roomId}"></label>
+        <label>End <input type="datetime-local" id="addEnd_${roomId}"></label>
+        <label>Title <input type="text" id="addTitle_${roomId}" placeholder="Blackout"></label>
+        <button class="primary" id="addBtn_${roomId}">Add Blackout</button>
+        <span class="hint">Adds to <code>calendars.${roomId}</code> as type=BLACKOUT</span>
+      `;
+      left.appendChild(addRow);
+
+      left.querySelector('#addBtn_'+cssEscape(roomId)).onclick = ()=>{
+        const s = left.querySelector('#addStart_'+cssEscape(roomId)).value;
+        const e = left.querySelector('#addEnd_'+cssEscape(roomId)).value;
+        const t = left.querySelector('#addTitle_'+cssEscape(roomId)).value || 'Blackout';
+        const ev = { id: `BLK-${Date.now()}`, roomId, type:'BLACKOUT', title: t, startAt: fromLocalInput(s)||'', endAt: fromLocalInput(e)||'', createdAt: new Date().toISOString(), status:'Confirmed' };
+        events.push(ev);
+        addFix(`Added blackout ${ev.id} for ${roomId} (in-memory)`);
+        renderTab('calendar');
+      };
+
+      // Right: Weekly hours (best-effort discovery)
+      const right = document.createElement('div');
+      right.innerHTML = `<h3>Room ${roomId} — Weekly Hours</h3>`;
+      // try to find weekly hours under rooms array/object
+      const weekly = findWeeklyForRoom(state.admin, roomId);
+      right.innerHTML += weekly ? renderWeekly(weekly) : `<div class="muted">No weekly hours mapped for this room.</div>`;
+
+      panel.appendChild(left);
+      panel.appendChild(right);
+      container.appendChild(panel);
+    });
+
+    c.appendChild(container);
+  }
+
+  function toLocalInput(iso){
+    if(!iso) return '';
+    const d = new Date(iso);
+    const pad = n=>String(n).padStart(2,'0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function fromLocalInput(val){
+    if(!val) return '';
+    const d = new Date(val);
+    return isNaN(d.getTime())? '': d.toISOString();
+  }
+  function cssEscape(s){ return CSS && CSS.escape ? CSS.escape(s): s.replace(/[^a-z0-9_-]/gi,'_'); }
+
+  function findWeeklyForRoom(admin, roomId){
+    // Try common locations
+    const rooms = admin.rooms;
+    if(rooms){
+      if(Array.isArray(rooms)){
+        for(const r of rooms){ if((r.id||r.roomId)===roomId && (r.weeklyHours||r.openingHours)) { markVisited('rooms'); return r.weeklyHours||r.openingHours; } }
+      } else {
+        const r = rooms[roomId];
+        if(r && (r.weeklyHours||r.openingHours)) { markVisited('rooms.'+roomId+'.weeklyHours'); return r.weeklyHours||r.openingHours; }
+      }
+    }
+    // Try a global map
+    if(admin.weeklyHours){ markVisited('weeklyHours'); return admin.weeklyHours[roomId] || null; }
+    return null;
+  }
+
+  // ---- Pricing ----
+  function renderPricing(c){
+    const a = state.admin;
+    const pricing = a.pricing || a.rates || null;
+    if(pricing) markVisited('pricing');
+
+    const panel = document.createElement('section');
+    panel.className = 'panel';
+    panel.innerHTML = `<h2>Pricing</h2>`;
+    if(!pricing){
+      panel.innerHTML += `<div class="muted">No pricing mapped yet.</div>`;
+    } else {
+      // Attempt to display common structures
+      const table = document.createElement('table');
+      table.innerHTML = `<thead><tr><th>Room</th><th>perHour</th><th>halfDay</th><th>fullDay</th><th>Rule</th></tr></thead><tbody></tbody>`;
+      const rows = [];
+      if(Array.isArray(pricing)){
+        pricing.forEach(p=> rows.push(p));
+      } else if (typeof pricing==='object'){
+        Object.entries(pricing).forEach(([roomId,p])=> rows.push({roomId, ...(p||{})}));
+      }
+      rows.forEach(p=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${p.roomId||p.room||'—'}</td><td>${p.perHour??'—'}</td><td>${p.halfDay??'—'}</td><td>${p.fullDay??'—'}</td><td>${p.rule||p.mode||'—'}</td>`;
+        table.querySelector('tbody').appendChild(tr);
+      });
+      panel.appendChild(table);
+    }
+    c.appendChild(panel);
+  }
+
+  // ---- Add-ons ----
+  function renderAddons(c){
+    const ad = state.addons;
+    const wrap = document.createElement('section');
+    wrap.className = 'panel';
+    wrap.innerHTML = `<h2>Add-ons</h2>`;
+    if(!ad){
+      wrap.innerHTML += `<div class="muted">No <code>${PATH_ADDONS}</code> file found.</div>`;
+      c.appendChild(wrap); return;
+    }
+
+    const items = Array.isArray(ad) ? ad : (ad.items || []);
+
+    const table = document.createElement('table');
+    table.innerHTML = `<thead><tr>
+      <th>Name</th><th>Category</th><th>includedByDefault</th><th>visibleToBooker</th><th>pricingMode</th><th>unitPeriodIds</th><th>Notes</th>
+    </tr></thead><tbody></tbody>`;
+
+    items.forEach(x=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><b>${x.name||x.id||'—'}</b></td>
+        <td>${x.category||'—'}</td>
+        <td>${fmt.bool(x.includedByDefault)}</td>
+        <td>${fmt.bool(x.visibleToBooker)}</td>
+        <td>${x.pricingMode||'—'}</td>
+        <td>${Array.isArray(x.unitPeriodIds)? x.unitPeriodIds.join(', '): '—'}</td>
+        <td>${x.notes||''}</td>
+      `;
+      table.querySelector('tbody').appendChild(tr);
+    });
+
+    wrap.appendChild(table);
+    c.appendChild(wrap);
+  }
+
+  // ---- Raw JSON & Validation ----
+  function renderRaw(c){
+    computeUnmapped();
+
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+
+    const left = document.createElement('section');
+    left.className = 'panel';
+    left.innerHTML = `<h2>Raw JSON (current working model)</h2>`;
+    const pre = document.createElement('pre');
+    pre.textContent = JSON.stringify(state.admin, null, 2);
+    left.appendChild(pre);
+
+    const right = document.createElement('section');
+    right.className = 'panel';
+    right.innerHTML = `<h2>Validation & Unmapped</h2><p class="hint"><b>Rule:</b> If you cannot see/edit a field in the UI, it is <b>Not Live</b>. Anything listed here is present in JSON but not driving the UI yet.</p>`;
+
+    const unmapped = document.createElement('div');
+    unmapped.innerHTML = `<h3>Unmapped fields</h3>`;
+    if(state.unmappedPaths.length===0){
+      unmapped.innerHTML += `<div class="pill good">All mapped</div>`;
+    } else {
+      const ul = document.createElement('ul'); ul.className='list';
+      state.unmappedPaths.slice(0,500).forEach(p=>{
+        const li = document.createElement('li'); li.textContent = p; ul.appendChild(li);
+      });
+      unmapped.appendChild(ul);
+      if(state.unmappedPaths.length>500) unmapped.innerHTML += `<div class="hint">+${state.unmappedPaths.length-500} more…</div>`;
+    }
+
+    right.appendChild(unmapped);
+
+    const schema = document.createElement('div');
+    schema.innerHTML = `<h3>Schema checks</h3><div class="muted">Basic presence checks only (no external libs):</div>`;
+    const checks = [];
+    if(!state.admin.calendars){ checks.push('Missing root field: calendars'); }
+    if(!state.admin.rooms){ checks.push('Missing root field: rooms'); }
+    if(state.addons===null){ checks.push('Add-ons file missing (optional)'); }
+
+    if(checks.length){
+      const ul = document.createElement('ul'); ul.className='list';
+      checks.forEach(m=>{ const li=document.createElement('li'); li.className='warnline'; li.textContent=m; ul.appendChild(li); addFix(m); });
+      schema.appendChild(ul);
+      setTabBadge('raw', checks.length, 'warn');
+    } else { schema.innerHTML += `<div class="pill good">No basic issues found</div>`; }
+
+    grid.appendChild(left); grid.appendChild(right); c.appendChild(grid);
+  }
+
+  // ---- Fix Log ----
+  function renderFixLog(c){
+    const panel = document.createElement('section'); panel.className='panel';
+    panel.innerHTML = `<h2>Fix Log (read-only)</h2>`;
+    if(!state.fixLog.length){ panel.innerHTML += `<div class="muted">No fixes or flags yet.</div>`; }
+    else {
+      const ul = document.createElement('ul'); ul.className='list';
+      state.fixLog.forEach(m=>{ const li=document.createElement('li'); li.textContent = m; ul.appendChild(li); });
+      panel.appendChild(ul);
+    }
+    c.appendChild(panel);
+  }
+
+  function panelHTML(html){ const s=document.createElement('section'); s.className='panel'; s.innerHTML=html; return s; }
+  function panelNode(title, node){ const s=document.createElement('section'); s.className='panel'; s.innerHTML=`<h2>${title}</h2>`; s.appendChild(node); return s; }
+
+  // ======== Kickoff ========
+  init();
+  </script>
+  <div class="wrap footer muted">Design note: Single-file, no build step. Serve from repo root (or /portal/) so relative paths resolve to <code>/data/*</code>.</div>
+</body>
+</html>
