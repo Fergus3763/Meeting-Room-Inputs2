@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin Superview — Diagnostic Loader</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:0;background:#0f1220;color:#e8ebff}
+  header{padding:12px 16px;border-bottom:1px solid #22263d;background:#141831;position:sticky;top:0}
+  .wrap{max-width:1100px;margin:0 auto;padding:16px}
+  h1{font-size:18px;margin:0}
+  section{background:#171a2b;border:1px solid #22263d;border-radius:10px;padding:12px;margin:12px 0}
+  code,pre{background:#0b0e1a;border:1px solid #22263d;color:#cfe0ff;padding:8px;border-radius:8px;overflow:auto}
+  .ok{color:#66d9a8}.bad{color:#ff7a7a}.muted{color:#8b90a8}
+  .pill{display:inline-block;border:1px solid #22263d;background:#0b0e1a;border-radius:999px;padding:2px 8px;margin:2px 6px 2px 0}
+  button{background:#2b356b;border:1px solid #3a4696;color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>Admin Superview — Diagnostic Loader</h1></div></header>
+<main class="wrap">
+  <section>
+    <p>This diagnostic page will try multiple URL patterns to fetch your JSON files and will show which ones <span class="ok">succeed</span> or <span class="bad">fail</span>.</p>
+    <p class="muted">After we see the working URL, we'll lock the final <code>admin.html</code> to that path.</p>
+    <button id="run">Run diagnostics</button>
+  </section>
+  <section id="out"><div class="muted">No output yet.</div></section>
+</main>
+<script>
+const TARGETS = [
+  {label:'Admin', base:'data/admin-data.json'},
+  {label:'Addons', base:'data/catalog/addons.json'}
+];
+function candidates(base){
+  // Page path e.g. /Meeting-Room-Inputs2/portal/admin.html
+  const segs = window.location.pathname.split('/').filter(Boolean);
+  const repo = segs[0] || '';
+  const list = [];
+  // relative to /portal/
+  list.push('../'+base);
+  // root-relative under repo path
+  if(repo) list.push('/'+repo+'/'+base);
+  // same folder (incorrect on GH Pages, but try)
+  list.push('./'+base);
+  // absolute root (will fail on GH Pages)
+  list.push('/'+base);
+  return Array.from(new Set(list));
+}
+async function tryFetch(url){
+  try{
+    const res = await fetch(url, {cache:'no-store'});
+    return {ok: res.ok, status: res.status, url, text: await res.text()};
+  }catch(e){
+    return {ok:false, status:'ERR', url, text: String(e)};
+  }
+}
+async function run(){
+  const out = document.getElementById('out');
+  out.innerHTML = '';
+  for(const t of TARGETS){
+    const sec = document.createElement('div');
+    sec.innerHTML = `<h3>${t.label}</h3>`;
+    const ul = document.createElement('ul');
+    for(const u of candidates(t.base)){
+      const li = document.createElement('li');
+      li.className = 'pill muted';
+      li.textContent = 'Trying ' + u + ' ...';
+      ul.appendChild(li);
+      const res = await tryFetch(u);
+      li.className = 'pill ' + (res.ok ? 'ok' : 'bad');
+      li.textContent = (res.ok?'OK':'FAIL') + ` ${res.status} — ` + res.url;
+      if(res.ok){
+        const pre = document.createElement('pre');
+        let snippet = res.text.slice(0, 2000);
+        pre.textContent = snippet + (res.text.length>2000?'...\n[truncated]':'');
+        sec.appendChild(pre);
+      }
+    }
+    sec.appendChild(ul);
+    out.appendChild(sec);
+  }
+}
+document.getElementById('run').onclick = run;
+</script>
+</body>
+</html>
