@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+Step 1 done<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -78,6 +78,51 @@
   const TZ_DEFAULT = 'Europe/Dublin';
   const PATH_ADMIN  = '../data/admin-data.json';
 const PATH_ADDONS = '../data/catalog/addons.json';
+// Fallback fetch that tries multiple URL candidates (like the diagnostic)
+async function fetchWithFallback(candidates) {
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (res.ok) return res.json();
+    } catch (_) {}
+  }
+  throw new Error('All candidates failed: ' + candidates.join(' | '));
+}
+
+// Build candidate lists that work on GitHub Pages and locally
+function adminCandidates() {
+  const repo = location.pathname.split('/').filter(Boolean)[0] || '';
+  return [
+    '../data/admin-data.json',                       // from /portal/
+    repo ? `/${repo}/data/admin-data.json` : null,  // absolute under repo
+    './data/admin-data.json',                        // same folder (rare)
+    '/data/admin-data.json'                          // site root (often 404 on GH Pages)
+  ].filter(Boolean);
+}
+
+function addonsCandidates() {
+  const repo = location.pathname.split('/').filter(Boolean)[0] || '';
+  return [
+    '../data/catalog/addons.json',
+    repo ? `/${repo}/data/catalog/addons.json` : null,
+    './data/catalog/addons.json',
+    '/data/catalog/addons.json'
+  ].filter(Boolean);
+}
+
+// Replace the simple loaders with the fallback versions
+async function loadAdminJSON() {
+  state.adminRaw = await fetchWithFallback(adminCandidates());
+}
+async function loadAddonsJSON() {
+  try {
+    state.addons = await fetchWithFallback(addonsCandidates());
+  } catch (e) {
+    // optional/addons: allow UI to load even if missing
+    console.warn('Add-ons load failed:', e);
+    state.addons = null;
+  }
+}
 
   const PATH_ADDONS_SCHEMA = '/docs/schemas/addons.schema.json'; // optional for display only
 
