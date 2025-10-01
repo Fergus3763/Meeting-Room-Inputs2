@@ -76,8 +76,8 @@ Step 1 done<!DOCTYPE html>
   <script>
   // ======== Config ========
   const TZ_DEFAULT = 'Europe/Dublin';
-  const PATH_ADMIN  = '../data/admin-data.json';
-const PATH_ADDONS = '../data/catalog/addons.json';
+const PATH_ADMIN  = '/Meeting-Room-Inputs2/data/admin-data.json';
+const PATH_ADDONS = '/Meeting-Room-Inputs2/data/catalog/addons.json';
 // Fallback fetch that tries multiple URL candidates (like the diagnostic)
 async function fetchWithFallback(candidates) {
   for (const url of candidates) {
@@ -203,21 +203,37 @@ async function loadAddonsJSON() {
     }
     throw new Error('Failed to load '+path+' — ensure this HTML is served from repo root or /portal/.');
   }
+// --- HARD-RELIABLE LOADER (GH Pages absolute paths) ---
+async function init(){
+  try{
+    // Admin JSON (canonical)
+    const adminRes = await fetch(PATH_ADMIN, { cache: 'no-store' });
+    if (!adminRes.ok) throw new Error(`Admin JSON HTTP ${adminRes.status}`);
+    const admin = await adminRes.json();
+    state.adminRaw = deepClone(admin);
+    state.admin    = deepClone(admin);
 
-  async function init(){
-    try{
-      const [admin, addons] = await Promise.all([
-        loadJSON(PATH_ADMIN),
-        loadJSON(PATH_ADDONS).catch(()=>null),
-      ]);
-      state.adminRaw = deepClone(admin);
-      state.admin = deepClone(admin);
-      state.addons = addons;
-      renderApp();
-    }catch(e){
-      document.getElementById('content').innerHTML = `<section class="panel"><h2>Load Error</h2><div class="dangerline">${e.message}</div><p class="hint">Check file paths and repo layout. Expected <code>${PATH_ADMIN}</code> and <code>${PATH_ADDONS}</code>.</p></section>`;
-      console.error(e);
+    // Add-ons (optional)
+    try {
+      const addonsRes = await fetch(PATH_ADDONS, { cache: 'no-store' });
+      state.addons = addonsRes.ok ? await addonsRes.json() : null;
+    } catch (_e) {
+      state.addons = null;
     }
+
+    renderApp();
+  } catch (e) {
+    document.getElementById('content').innerHTML =
+      `<section class="panel"><h2>Load Error</h2>
+        <div class="warnline">${e.message}</div>
+        <p class="hint">Using absolute repo paths:
+          <code>${PATH_ADMIN}</code> and <code>${PATH_ADDONS}</code>
+        </p></section>`;
+    console.error(e);
+  }
+}
+
+ 
   }
 
   // ======== UI: Tabs ========
