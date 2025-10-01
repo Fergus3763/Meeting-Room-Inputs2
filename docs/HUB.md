@@ -3,6 +3,12 @@
 
 **What we’re building**
 A hotel-facing, self-serve platform (SaaS) that lets venues publish **meeting rooms** with all pertinent data and variables and lets bookers configure and price them **end-to-end** (room, layouts, durations, included items, and paid add-ons like AV/F&B) **without human back-and-forth**.
+**How we are doing it**
+-Hub and Spoke
+-Hub/Owner direct Spokes 
+-Hub is Keeper of truth.
+-Spokes will undertake project subtasks
+-All Work reverts to HUB.
 
 **Problem we’re solving**
 Meeting-room bookings are slow and labour-intensive because there are many variables and hidden rules. We are targeting the meeting room on-demand market, typically 1-30 persons. Hotels with multiple meeting/conference rooms will likely have property management system requring significant human interaction. This does not facilitate the on-demand/instant booker. Hotels will won’t adopt a second system, so our product must handle **all sizes** (2–20 core focus, but also legacy large rooms) and **complexity**, while still enabling quick, automated quotes for small teams.
@@ -14,6 +20,7 @@ Meeting-room bookings are slow and labour-intensive because there are many varia
 **Owner & working style**
 - Product owner is **non-technical**. Please give **plain-English**, **2–3 step** instructions, with **exact paths/filenames**, quick access links and copy-paste snippets. Keep steps short and ask him to confim completion per step = "DONE"
 - Avoid jargon, no background work; surface every required action explicitly.
+- User requires single(location) cumulative UI presentaion to verify work is complete
 
 **Scope (now)**
 - Canonical data in repo at `/data/admin-data.json` (snapshots in `/data/snapshots/YYYY-MM-DD/`).
@@ -60,13 +67,14 @@ docs: update Hub status + next tasks (2025-09-25)
   - #2 — Standardize fetch + paths in Baseline UI (point to `/data/admin-data.json`).
 
 **Next 3 Tasks**
-1. Createa NEW Integration/Parsing Spoke(previous one slowing down):
+1. Create a NEW Integration/Parsing Spoke(previous one slowing down): 
    - Confirm Build 014 renders cleanly.
    - Ensure it loads data from `/data/admin-data.json` (no hard-coded older paths).
 2. Wire add-ons catalog:
    - Load `/data/catalog/addons.json` into Admin toggles (include/optional) for Room & F&B/AV.
 3. Recovery follow-ups:
    - Inventory remaining legacy builds; note deltas vs. canonical JSON for later merge.
+4. Create Prompt for the new Integration/Parsing Spoke
 
 **Maintenance ritual**
 - After each working session: update this Status Block, snapshot to `/data/snapshots/YYYY-MM-DD/admin-data.json`, bump `/data/heartbeat.json` (hubISO & snapshotISO), and paste links above.
