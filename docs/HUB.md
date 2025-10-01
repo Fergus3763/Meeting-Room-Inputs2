@@ -12,7 +12,7 @@ Meeting-room bookings are slow and labour-intensive because there are many varia
 - **Room Bookers** — configure a meeting and get a reliable, transparent price.
 
 **Owner & working style**
-- Product owner is **non-technical**. Please give **plain-English**, **2–3 step** instructions, with **exact paths/filenames** and copy-paste snippets.
+- Product owner is **non-technical**. Please give **plain-English**, **2–3 step** instructions, with **exact paths/filenames**, quick access links and copy-paste snippets. Keep steps short and ask him to confim completion per step = "DONE"
 - Avoid jargon, no background work; surface every required action explicitly.
 
 **Scope (now)**
@@ -60,7 +60,7 @@ docs: update Hub status + next tasks (2025-09-25)
   - #2 — Standardize fetch + paths in Baseline UI (point to `/data/admin-data.json`).
 
 **Next 3 Tasks**
-1. Start Integration/Parsing Spoke:
+1. Createa NEW Integration/Parsing Spoke(previous one slowing down):
    - Confirm Build 014 renders cleanly.
    - Ensure it loads data from `/data/admin-data.json` (no hard-coded older paths).
 2. Wire add-ons catalog:
