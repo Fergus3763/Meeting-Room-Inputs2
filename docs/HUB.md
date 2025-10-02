@@ -51,14 +51,13 @@ Meeting-room bookings are slow and labour-intensive because there are many varia
 - Issues: https://github.com/Fergus3763/Meeting-Room-Inputs2/issues
 - Recovery Log: https://github.com/Fergus3763/Meeting-Room-Inputs2/blob/main/legacy/RECOVERY-LOG.md
 
-**Status Block (last updated):**
-<paste the current Status Block from the Hub doc here>
-2025-09-25: Snapshot saved; heartbeat bumped; starting Integration/Parsing spoke.
-docs: update Hub status + next tasks (2025-09-25)
+**Status Block (last updated):** 2025-10-02 (Europe/Dublin)
 
-**Status Block (last updated):** 2025-09-25 (Europe/Dublin)
-## 2025-10-02
-- Handoff: Spoke #2 (Integration/Parsing) started with seed prompt; expecting UI tabs fix + cumulative mapping + updated STATUS/FIXLOG + fresh snapshot.
+- Integration/Parsing Spoke **#2 — Running (landing)**
+- Focus: Tabs-first render fix → enforce absolute fetch paths → keep **Raw JSON → “Unmapped”** visible → update **STATUS.md** and **FIXLOG.md** → refresh **snapshot 2025-10-02**.
+- Logs:
+  - Status: `/docs/STATUS.md`
+  - Fixes: `/docs/FIXLOG.md`
 
 **Progress**
 - Canonical JSON updated: [`/data/admin-data.json`](https://github.com/Fergus3763/Meeting-Room-Inputs2/blob/main/data/admin-data.json).
