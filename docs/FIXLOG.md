@@ -8,4 +8,6 @@ Tracks fixes made by Integration/Parsing Spoke #2.
   - Absolute fetch paths enforced for GitHub Pages
   - Raw JSON “Unmapped” shows any not-yet-mapped fields
   - Export workflow verified (in-memory → Export JSON → paste to canonical + snapshot)
+- fix(data): close root object in admin-data.json (added final })
+- fix(admin): removed stray } causing SyntaxError; tabs render and data loads
 
