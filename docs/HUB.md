@@ -57,6 +57,8 @@ Meeting-room bookings are slow and labour-intensive because there are many varia
 docs: update Hub status + next tasks (2025-09-25)
 
 **Status Block (last updated):** 2025-09-25 (Europe/Dublin)
+## 2025-10-02
+- Handoff: Spoke #2 (Integration/Parsing) started with seed prompt; expecting UI tabs fix + cumulative mapping + updated STATUS/FIXLOG + fresh snapshot.
 
 **Progress**
 - Canonical JSON updated: [`/data/admin-data.json`](https://github.com/Fergus3763/Meeting-Room-Inputs2/blob/main/data/admin-data.json).
