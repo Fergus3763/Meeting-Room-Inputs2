@@ -6,3 +6,4 @@
 - Handoff: Spoke #2 (Integration/Parsing) started with seed prompt; expecting UI tabs fix + cumulative mapping + updated STATUS/FIXLOG + fresh snapshot.
 - Integration/Parsing: Tabs rendering and data load confirmed (Incognito + ?v). Console clean; Network shows absolute fetches to /Meeting-Room-Inputs2/data/admin-data.json and /Meeting-Room-Inputs2/data/catalog/addons.json.
 - Snapshot: /data/snapshots/2025-10-02/admin-data.json uploaded.
+- Coverage: 13% (425 total paths; 55 mapped; 370 unmapped). Coverage Report enabled in Admin.
