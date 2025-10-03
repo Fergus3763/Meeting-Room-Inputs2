@@ -905,6 +905,29 @@ document.getElementById("coverageBtn")?.addEventListener("click", () => {
     "createdAt", "title", "details"
   ]);
 </script>
- 
+ <script>
+  (function fillVatDefaults(){
+    try {
+      const src = window.__lastLoadedAdminJson || window.adminData || {};
+      const get = (path, obj=src) => path.split('.').reduce((o,k)=> (o||{})[k], obj);
+
+      const pairs = [
+        ['vatRate', 'vatRate'],
+        ['pricing.vatDefaults.room', 'pricing.vatDefaults.room'],
+        ['pricing.vatDefaults.fnb',  'pricing.vatDefaults.fnb'],
+        ['pricing.vatDefaults.av',   'pricing.vatDefaults.av'],
+        ['pricing.vatDefaults.staff','pricing.vatDefaults.staff'],
+      ];
+
+      pairs.forEach(([name, path]) => {
+        const el = document.querySelector(`input[name="${name}"]`);
+        if (el) el.value = get(path) ?? '';
+      });
+    } catch(e) {
+      console.warn('VAT fill error:', e);
+    }
+  })();
+</script>
+
 </body>
 </html>
