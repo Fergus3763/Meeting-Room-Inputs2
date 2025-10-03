@@ -10,4 +10,5 @@ Tracks fixes made by Integration/Parsing Spoke #2.
   - Export workflow verified (in-memory → Export JSON → paste to canonical + snapshot)
 - fix(data): close root object in admin-data.json (added final })
 - fix(admin): removed stray } causing SyntaxError; tabs render and data loads
+- chore(snapshot): 2025-10-02 admin-data.json saved to /data/snapshots/2025-10-02/
 
