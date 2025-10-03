@@ -778,9 +778,20 @@ function collectJsonPaths(obj, prefix = "") {
 }
 function collectUiKeys() {
   const keys = new Set();
-  document.querySelectorAll("[data-key]").forEach((el) => keys.add(el.getAttribute("data-key")));
-  document.querySelectorAll("input[name], select[name], textarea[name]").forEach((el) => keys.add(el.name));
+
+  // Prefer explicit list, if provided
+  if (window.__uiKeys) {
+    (window.__uiKeys instanceof Set ? Array.from(window.__uiKeys) : window.__uiKeys)
+      .forEach(k => keys.add(k));
+  }
+
+  // Also collect from the DOM
+  document.querySelectorAll("[data-key]").forEach(el => keys.add(el.getAttribute("data-key")));
+  document.querySelectorAll("input[name], select[name], textarea[name]").forEach(el => keys.add(el.name));
+
   return keys;
+}
+
 }
 function buildCoverageReport() {
   const src = window.__lastLoadedAdminJson || window.adminData || {};
