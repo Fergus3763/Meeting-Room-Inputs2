@@ -792,7 +792,6 @@ function collectUiKeys() {
   return keys;
 }
 
-}
 function buildCoverageReport() {
   const src = window.__lastLoadedAdminJson || window.adminData || {};
   const jsonPaths = Array.from(new Set(collectJsonPaths(src)));
