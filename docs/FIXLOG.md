@@ -11,4 +11,11 @@ Tracks fixes made by Integration/Parsing Spoke #2.
 - fix(data): close root object in admin-data.json (added final })
 - fix(admin): removed stray } causing SyntaxError; tabs render and data loads
 - chore(snapshot): 2025-10-02 admin-data.json saved to /data/snapshots/2025-10-02/
+- feat(admin): Coverage Report — first reading
+  - Coverage: 13%
+  - Total paths: 425
+  - Mapped: 55
+  - Unmapped: 370
+  - Notes: see first 10 unmapped below
+    - (paste the 10 lines from the Coverage panel → “First 10 Unmapped”)
 
