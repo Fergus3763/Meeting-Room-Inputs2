@@ -67,6 +67,33 @@ Step 1 done<!DOCTYPE html>
           <span class="hint">In‑memory only. Downloads current working copy.</span>
         </div>
       </div>
+     <div class="card" id="vatDefaultsCard" style="margin-top:12px; padding:12px; border:1px solid #ddd;">
+  <h3>Pricing · VAT Defaults</h3>
+
+  <label>Global VAT Rate
+    <input type="number" step="0.01" name="vatRate" data-key="vatRate" readonly />
+  </label>
+
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:8px;">
+    <label>Room VAT
+      <input type="number" step="0.01" name="pricing.vatDefaults.room" data-key="pricing.vatDefaults.room" readonly />
+    </label>
+    <label>F&B VAT
+      <input type="number" step="0.01" name="pricing.vatDefaults.fnb" data-key="pricing.vatDefaults.fnb" readonly />
+    </label>
+    <label>AV VAT
+      <input type="number" step="0.01" name="pricing.vatDefaults.av" data-key="pricing.vatDefaults.av" readonly />
+    </label>
+    <label>Staff VAT
+      <input type="number" step="0.01" name="pricing.vatDefaults.staff" data-key="pricing.vatDefaults.staff" readonly />
+    </label>
+  </div>
+
+  <p style="font-size:12px; color:#555; margin-top:8px;">
+    (Read-only for now. We’ll make these editable later. They still count as mapped because they’re visible fields.)
+  </p>
+</div>
+ 
       <div class="tabs" id="tabs"></div>
     </div>
   </header>
