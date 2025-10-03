@@ -860,6 +860,25 @@ document.getElementById("coverageBtn")?.addEventListener("click", () => {
     }
   })();
 </script>
+<script>
+  // Seed list of UI fields that currently appear in the Admin
+  window.__uiKeys = new Set([
+    // Rooms basics
+    "name", "capacity", "area", "status",
+
+    // Pricing basics (if shown)
+    "price", "currency",
+
+    // Add-ons basics
+    "addons",
+
+    // Calendars section (sample keys you’re using)
+    "calendars", "RM-101", "RM-7F90X",
+
+    // Meta
+    "createdAt", "title", "details"
+  ]);
+</script>
  
 </body>
 </html>
