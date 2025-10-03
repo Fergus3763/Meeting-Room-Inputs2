@@ -836,6 +836,19 @@ document.getElementById("coverageBtn")?.addEventListener("click", () => {
   }
 });
 </script>
+<script>
+  // Make sure Coverage can see the latest admin JSON
+  (async () => {
+    try {
+      const res = await fetch('/Meeting-Room-Inputs2/data/admin-data.json', { cache: 'no-store' });
+      if (res.ok) {
+        window.__lastLoadedAdminJson = await res.json();
+      }
+    } catch (e) {
+      console.warn('Coverage preload failed:', e);
+    }
+  })();
+</script>
  
 </body>
 </html>
