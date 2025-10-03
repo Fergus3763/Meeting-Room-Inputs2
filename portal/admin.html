@@ -752,5 +752,90 @@ async function init(){
   init();
   </script>
   <div class="wrap footer muted">Design note: Single-file, no build step. Serve from repo root (or /portal/) so relative paths resolve to <code>/data/*</code>.</div>
+ <script>
+/* ---- Coverage Report (Mapped vs Unmapped) ----
+   "Mapped" = there is a UI input/select/textarea with a matching path or key
+   "Unmapped" = exists in JSON but no matching UI control
+------------------------------------------------- */
+function collectJsonPaths(obj, prefix = "") {
+  let out = [];
+  if (obj && typeof obj === "object") {
+    if (Array.isArray(obj)) {
+      obj.forEach((v, i) => {
+        const p = prefix ? `${prefix}[${i}]` : `[${i}]`;
+        out.push(p);
+        out = out.concat(collectJsonPaths(v, p));
+      });
+    } else {
+      Object.keys(obj).forEach((k) => {
+        const p = prefix ? `${prefix}.${k}` : k;
+        out.push(p);
+        out = out.concat(collectJsonPaths(obj[k], p));
+      });
+    }
+  }
+  return out;
+}
+function collectUiKeys() {
+  const keys = new Set();
+  document.querySelectorAll("[data-key]").forEach((el) => keys.add(el.getAttribute("data-key")));
+  document.querySelectorAll("input[name], select[name], textarea[name]").forEach((el) => keys.add(el.name));
+  return keys;
+}
+function buildCoverageReport() {
+  const src = window.__lastLoadedAdminJson || window.adminData || {};
+  const jsonPaths = Array.from(new Set(collectJsonPaths(src)));
+  const uiKeys = collectUiKeys();
+  const mapped = new Set();
+  jsonPaths.forEach((p) => {
+    const last = p.split(".").pop().replace(/\[\d+\]$/,"");
+    if (uiKeys.has(p) || uiKeys.has(last)) mapped.add(p);
+  });
+  const unmapped = jsonPaths.filter((p) => !mapped.has(p));
+  const partial = new Set();
+  const mappedSet = new Set(mapped);
+  const unmappedSet = new Set(unmapped);
+  jsonPaths.forEach((p) => {
+    const childrenMapped = jsonPaths.some((c) => c !== p && c.startsWith(p + ".") && mappedSet.has(c));
+    const childrenUnmapped = jsonPaths.some((c) => c !== p && c.startsWith(p + ".") && unmappedSet.has(c));
+    if (childrenMapped && childrenUnmapped) partial.add(p);
+  });
+  const pct = jsonPaths.length ? Math.round((mapped.size / jsonPaths.length) * 100) : 100;
+  return {
+    counts: { total: jsonPaths.length, mapped: mapped.size, unmapped: unmapped.length, partial: partial.size, coveragePct: pct },
+    samples: {
+      first10Unmapped: unmapped.slice(0, 10),
+      first10Mapped: Array.from(mapped).slice(0, 10),
+      first10Partial: Array.from(partial).slice(0, 10),
+    }
+  };
+}
+document.getElementById("coverageBtn")?.addEventListener("click", () => {
+  try {
+    const panel = document.getElementById("coveragePanel");
+    const report = buildCoverageReport();
+    const lines = [];
+    lines.push(`Coverage: ${report.counts.coveragePct}%`);
+    lines.push(`Total paths: ${report.counts.total}`);
+    lines.push(`Mapped: ${report.counts.mapped}`);
+    lines.push(`Unmapped: ${report.counts.unmapped}`);
+    lines.push(`Partial (parents with mixed children): ${report.counts.partial}`);
+    lines.push("");
+    lines.push("First 10 Unmapped:");
+    report.samples.first10Unmapped.forEach((p) => lines.push(" - " + p));
+    lines.push("");
+    lines.push("First 10 Mapped:");
+    report.samples.first10Mapped.forEach((p) => lines.push(" - " + p));
+    lines.push("");
+    lines.push("First 10 Partial:");
+    report.samples.first10Partial.forEach((p) => lines.push(" - " + p));
+    panel.textContent = lines.join("\n");
+    panel.style.display = "block";
+  } catch (e) {
+    alert("Coverage error: " + e.message);
+  }
+});
+</script>
+ 
 </body>
 </html>
