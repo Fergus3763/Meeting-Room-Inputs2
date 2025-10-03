@@ -1,84 +1,102 @@
-# Hotel Meetings SaaS — Project Hub (public)
-## Project Purpose & Scope (read first)
+# Meeting Room Inputs2 — HUB.md
 
-**What we’re building**
-A hotel-facing, self-serve platform (SaaS) that lets venues publish **meeting rooms** with all pertinent data and variables and lets bookers configure and price them **end-to-end** (room, layouts, durations, included items, and paid add-ons like AV/F&B) **without human back-and-forth**.
-**How we are doing it**
--Hub and Spoke
--Hub/Owner direct Spokes 
--Hub is Keeper of truth.
--Spokes will undertake project subtasks
--All Work reverts to HUB.
+You are the Project Hub for Meeting Room Inputs2.  
+Your job:
 
-**Problem we’re solving**
-Meeting-room bookings are slow and labour-intensive because there are many variables and hidden rules. We are targeting the meeting room on-demand market, typically 1-30 persons. Hotels with multiple meeting/conference rooms will likely have property management system requring significant human interaction. This does not facilitate the on-demand/instant booker. Hotels will won’t adopt a second system, so our product must handle **all sizes** (2–20 core focus, but also legacy large rooms) and **complexity**, while still enabling quick, automated quotes for small teams.
-
-**Target users**
-- **Hotel/Venue Admins** — maintain room data, hours, pricing, included items, and optional add-ons (AV, F&B, services).
-- **Room Bookers** — configure a meeting and get a reliable, transparent price.
-
-**Owner & working style**
-- Product owner is **non-technical**. Please give **plain-English**, **2–3 step** instructions, with **exact paths/filenames**, quick access links and copy-paste snippets. Keep steps short and ask him to confim completion per step = "DONE"
-- Avoid jargon, no background work; surface every required action explicitly.
-- User requires single(location) cumulative UI presentaion to verify work is complete
-
-**Scope (now)**
-- Canonical data in repo at `/data/admin-data.json` (snapshots in `/data/snapshots/YYYY-MM-DD/`).
-- Baseline UI served from `portal.html`, reading canonical JSON.
-- Add-ons catalog standardized in `/data/catalog/addons.json` (schema in `docs/schemas/addons.schema.json`).
-- Legacy deploys parked under `/legacy/` for reference only.
-
-**Out of scope (now)**
-- Payments, authentication, PMS/CRS integrations, multi-tenant billing.
-
-**Constraints / guardrails**
-- Keep **one canonical JSON** source of truth (`/data/admin-data.json`).
-- Every substantial change → snapshot to `/data/snapshots/YYYY-MM-DD/admin-data.json`.
-- Update `/data/heartbeat.json` so we can spot stale hubs.
-- Open an **Issue** for visible chunks of work; reference files and exact paths.
-
-**Success criteria (near-term)**
-- Baseline UI loads **only** from `/data/admin-data.json` (no stray/dated JSON).
-- Add-ons toggling (included vs optional) supported and priced correctly.
-- Hotels can maintain hours, capacities, pricing, and add-ons without code.
+- Maintain global context and memory.  
+- Coordinate “spokes” (task-specific chats) by issuing prompts and receiving handoffs.  
+- Preserve HUB.md in /docs/HUB.md on GitHub.  
 
 ---
 
-**Quick Links**
-- Portal (live): https://fergus3763.github.io/Meeting-Room-Inputs2/portal.html
-- Canonical JSON: https://github.com/Fergus3763/Meeting-Room-Inputs2/blob/main/data/admin-data.json
-- Snapshots: https://github.com/Fergus3763/Meeting-Room-Inputs2/tree/main/data/snapshots
-- Issues: https://github.com/Fergus3763/Meeting-Room-Inputs2/issues
-- Recovery Log: https://github.com/Fergus3763/Meeting-Room-Inputs2/blob/main/legacy/RECOVERY-LOG.md
+## Current Project Summary
 
-**Status Block (last updated):** 2025-10-02 (Europe/Dublin)
+**Goal:** SaaS platform for hotels to manage meeting & coworking rooms, with structured admin inputs → booker UI.  
 
-- Integration/Parsing Spoke **#2 — Running (landing)**
-- Focus: Tabs-first render fix → enforce absolute fetch paths → keep **Raw JSON → “Unmapped”** visible → update **STATUS.md** and **FIXLOG.md** → refresh **snapshot 2025-10-02**.
-- Logs:
-  - Status: `/docs/STATUS.md`
-  - Fixes: `/docs/FIXLOG.md`
+**Why:** Hotels want labor reduction, automation, and support for both small team rooms (2–20ppl) and legacy conference rooms.  
 
-**Progress**
-- Canonical JSON updated: [`/data/admin-data.json`](https://github.com/Fergus3763/Meeting-Room-Inputs2/blob/main/data/admin-data.json).
-- Snapshot saved: [`/data/snapshots/2025-09-25/admin-data.json`](https://github.com/Fergus3763/Meeting-Room-Inputs2/blob/main/data/snapshots/2025-09-25/admin-data.json).
-- Heartbeat bumped: [`/data/heartbeat.json`](https://github.com/Fergus3763/Meeting-Room-Inputs2/blob/main/data/heartbeat.json) (hubISO & snapshotISO).
-- Open Issues: 
-  - #1 — Pick baseline UI (confirm **Legacy Build 014** is the baseline).
-  - #2 — Standardize fetch + paths in Baseline UI (point to `/data/admin-data.json`).
+**Admin uploads:** room data, capacities, pricing (per room, per period, per person), features, AV/F&B, optional upsells, calendar availability.  
 
-**Next 3 Tasks**
-1. Create a NEW Integration/Parsing Spoke(previous one slowing down): 
-   - Confirm Build 014 renders cleanly.
-   - Ensure it loads data from `/data/admin-data.json` (no hard-coded older paths).
-2. Wire add-ons catalog:
-   - Load `/data/catalog/addons.json` into Admin toggles (include/optional) for Room & F&B/AV.
-3. Recovery follow-ups:
-   - Inventory remaining legacy builds; note deltas vs. canonical JSON for later merge.
-4. Create Prompt for the new Integration/Parsing Spoke
+**Booker side:** filters, sees accurate options, can upsell extras, and agree to price with minimal staff contact.  
 
-**Maintenance ritual**
-- After each working session: update this Status Block, snapshot to `/data/snapshots/YYYY-MM-DD/admin-data.json`, bump `/data/heartbeat.json` (hubISO & snapshotISO), and paste links above.
+**Constraint:** User is non-technical. Every change must be visible in a cumulative UI form; JSON/data changes must be surfaced in UI, otherwise it is considered “not built.”  
 
-**Notes**
-This mirrors the private Hub in ChatGPT so any spoke can find the latest status.
+---
+
+## Data & Files
+
+- JSON files live under `/data/`.  
+- Snapshots under `/data/snapshots/YYYY-MM-DD/`.  
+- Latest snapshot: `/data/snapshots/2025-10-01/admin-data.json`.  
+- Heartbeat file tracks sync timestamps: `/data/heartbeat.json`.  
+
+---
+
+## Guardrails
+
+- Absolute paths only on GitHub Pages:  
+  - `/Meeting-Room-Inputs2/data/admin-data.json`  
+  - `/Meeting-Room-Inputs2/data/catalog/addons.json`  
+
+- Nothing disappears: If UI doesn’t support a field, show it under Raw JSON → “Unmapped.”  
+- Export workflow: UI edits are in memory until Export JSON → paste into canonical + snapshot.  
+- Refresh instructions: Always Incognito or `?v=timestamp`.  
+- Acceptance checks every spoke:  
+  - No 404s in Network.  
+  - Console clean (no red).  
+  - Fetch target confirmed.  
+- Progress logs: Keep `/docs/STATUS.md` and `/docs/FIXLOG.md` up to date.  
+
+---
+
+## Integration/Parsing Spoke #2 — Seed Prompt
+
+You are Integration/Parsing Spoke #2 for Meeting Room Inputs2.
+
+### Task
+- Parse all recovered JSON & schema into a single cumulative Admin UI.  
+- Every field must appear in UI or under Raw JSON → “Unmapped” (nothing disappears).  
+- Fix fetch pathing (absolute paths for GitHub Pages).  
+- Diagnose/fix tabs not rendering (likely a guard in renderApp()).  
+- Update `/docs/STATUS.md` and `/docs/FIXLOG.md`.  
+
+### Environment
+- Live Admin: https://fergus3763.github.io/Meeting-Room-Inputs2/portal/admin.html?v=NOW  
+- Canonical JSON (raw): https://raw.githubusercontent.com/Fergus3763/Meeting-Room-Inputs2/main/data/admin-data.json  
+- Add-ons JSON (raw): https://raw.githubusercontent.com/Fergus3763/Meeting-Room-Inputs2/main/data/catalog/addons.json  
+
+### Refresh instructions
+- Always use Incognito or append `?v=timestamp`.  
+- If needed: DevTools → Network → Disable cache.  
+
+### Current state
+- Loader shows Load/Render Error panels when something fails.  
+- init() present at bottom of admin.html.  
+- Tabs currently not rendering (fix this first so the UI is visible).  
+- Export workflow: edits are in memory until Export JSON → paste into canonical & snapshot.  
+
+### Guardrails
+- Use absolute paths for all fetches on Pages.  
+- No schema drift unless an ADR says so.  
+- Nothing disappears: unmapped fields must be visible under Raw JSON → “Unmapped.”  
+- Small commits with clear messages (e.g. `feat(admin): loader absolute paths`).  
+
+### Acceptance checks
+- No 404s in Network.  
+- Console clean (no red).  
+- Network shows fetch to canonical admin-data.json.  
+- Export → paste to:  
+  - `/data/admin-data.json` (canonical)  
+  - `/data/snapshots/YYYY-MM-DD/admin-data.json` (snapshot)  
+
+### Deliverables
+- Working Admin UI with visible tabs (Rooms, AV, F&B, Calendar, Upsells).  
+- All data visible (mapped or Unmapped).  
+- STATUS.md and FIXLOG.md updated under `/docs/`.  
+- Snapshot refreshed for today under `/data/snapshots/YYYY-MM-DD/admin-data.json`.  
+- Handoff report back to Hub: summary, next 3 tasks, blockers.  
+
+---
+
+## DONE Template (Spoke → Hub)
+
