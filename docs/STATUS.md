@@ -1,4 +1,9 @@
 # STATUS
+## 2025-10-03
+- Hub: HUB.md refreshed with Spoke2 Addendum (progress + routine + plain-English reminder).
+- Coverage: 13% (425 total; 55 mapped; 370 unmapped). Coverage Report enabled in Admin.
+- UI: VAT Defaults panel added (visible boxes, not yet editable/export).
+- Next: Make VAT inputs editable + included in Export JSON; map next 10 (`copy.*`) items; update STATUS/FIXLOG after each jump.
 
 **Last updated:** 2025-10-02 (Europe/Dublin)
 
