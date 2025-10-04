@@ -1,4 +1,11 @@
 # STATUS
+## 2025-10-04
+-Coverage: 14%
+-Total paths: 425
+-Mapped: 60
+-Unmapped: 365
+
+Partial (parents with mixed children): 35
 ## 2025-10-03
 - Hub: HUB.md refreshed with Spoke2 Addendum (progress + routine + plain-English reminder).
 - Coverage: 13% (425 total; 55 mapped; 370 unmapped). Coverage Report enabled in Admin.
