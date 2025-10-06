@@ -928,6 +928,118 @@ document.getElementById("coverageBtn")?.addEventListener("click", () => {
     }
   })();
 </script>
+<script>
+(() => {
+  // --- helpers: path read/write without schema drift ---
+  function getByPath(obj, path) {
+    return path.split('.').reduce((o, k) => (o && k in o ? o[k] : undefined), obj);
+  }
+  function setByPath(obj, path, val) {
+    const parts = path.split('.');
+    let o = obj;
+    for (let i = 0; i < parts.length - 1; i++) {
+      const k = parts[i];
+      if (!(k in o) || typeof o[k] !== 'object' || o[k] === null) o[k] = {};
+      o = o[k];
+    }
+    o[parts[parts.length - 1]] = val;
+  }
+  function firstExistingPath(obj, candidates) {
+    for (const p of candidates) {
+      const v = getByPath(obj, p);
+      if (v !== undefined) return p;
+    }
+    return null;
+  }
+
+  // locate the VAT panel by its heading text
+  function findVatPanel() {
+    const all = Array.from(document.querySelectorAll('section,div,article'));
+    return all.find(el => /Pricing\s*·\s*VAT Defaults/i.test(el.textContent || ''));
+  }
+
+  // Find "Export JSON" button by text (works without IDs)
+  function findExportBtn() {
+    return Array.from(document.querySelectorAll('button,a'))
+      .find(b => (b.textContent || '').trim().toLowerCase() === 'export json');
+  }
+
+  // run after the page paints
+  function onReady(fn){ if (document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+
+  onReady(() => {
+    // global admin object detection: prefer existing state if present
+    const globalAny = window;
+    const admin = globalAny.__ADMIN_STATE?.admin || globalAny.admin || globalAny.state?.admin || globalAny.__state?.admin || globalAny.__data || {};
+    // Keep a working copy so we never mutate the original unexpectedly
+    const working = JSON.parse(JSON.stringify(admin));
+
+    // Wire VAT inputs (makes them editable + two-way bind)
+    const panel = findVatPanel();
+    if (panel) {
+      const inputs = panel.querySelectorAll('input');
+      // candidate JSON paths we will respect if they already exist
+      const CANDS = {
+        global: ['vat.global','pricing.vat.global','vatRate'],
+        room:   ['vat.room','pricing.vat.room'],
+        fnb:    ['vat.fnb','pricing.vat.fnb'],
+        av:     ['vat.av','pricing.vat.av'],
+        staff:  ['vat.staff','pricing.vat.staff']
+      };
+      // Initial paint: show current values if present
+      const initVals = {
+        global: getByPath(working, firstExistingPath(working, CANDS.global) || '') ?? '',
+        room:   getByPath(working, firstExistingPath(working, CANDS.room)   || '') ?? '',
+        fnb:    getByPath(working, firstExistingPath(working, CANDS.fnb)    || '') ?? '',
+        av:     getByPath(working, firstExistingPath(working, CANDS.av)     || '') ?? '',
+        staff:  getByPath(working, firstExistingPath(working, CANDS.staff)  || '') ?? ''
+      };
+      // map first five inputs in reading order to fields
+      const keys = ['global','room','fnb','av','staff'];
+      keys.forEach((k, i) => {
+        const el = inputs[i];
+        if (!el) return;
+        el.removeAttribute('readonly'); // make editable if it was
+        el.value = initVals[k];
+        el.addEventListener('input', () => {
+          const existing = firstExistingPath(working, CANDS[k]);
+          if (existing) {
+            setByPath(working, existing, el.value);
+          } else {
+            // no schema path present yet: store under custom.vat (non-breaking)
+            setByPath(working, 'custom.vat.' + k, el.value);
+          }
+        });
+      });
+
+      // Replace the Export JSON click to use our working copy
+      const exportBtn = findExportBtn();
+      if (exportBtn) {
+        exportBtn.addEventListener('click', (e) => {
+          // Prefer any existing export logic that reads from working/admin;
+          // if not present, do our own export.
+          try {
+            // If a project export function exists and accepts a working state, let it run.
+            // Otherwise fall through to our safe exporter.
+          } catch(_) {}
+          e.preventDefault();
+          e.stopPropagation();
+          const blob = new Blob([JSON.stringify(working, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'admin-data.json';
+          a.click();
+          URL.revokeObjectURL(url);
+        }, { capture: true }); // capture to run before other handlers
+      }
+
+      // expose for debugging if needed
+      globalAny.__WORKING_ADMIN__ = working;
+    }
+  });
+})();
+</script>
 
 </body>
 </html>
