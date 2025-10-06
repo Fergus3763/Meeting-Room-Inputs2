@@ -1097,6 +1097,100 @@ document.getElementById("coverageBtn")?.addEventListener("click", () => {
   });
 })();
 </script>
+<script>
+(() => {
+  // Robust VAT binder: attaches by label text (not by input order)
+  function onReady(fn){ if (document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+  function findVatPanel(){
+    return Array.from(document.querySelectorAll('section,div,article'))
+      .find(el => /Pricing\s*·\s*VAT Defaults/i.test(el.textContent || ''));
+  }
+  function getByPath(obj, path){ if(!path) return undefined; return path.split('.').reduce((o,k)=> (o && k in o? o[k]:undefined), obj); }
+  function setByPath(obj, path, val){
+    const parts = path.split('.'); let o = obj;
+    for (let i=0;i<parts.length-1;i++){ const k=parts[i]; if(!(k in o) || typeof o[k]!=='object' || o[k]===null) o[k]={}; o=o[k]; }
+    o[parts[parts.length-1]] = val;
+  }
+  function firstExistingPath(obj, list){ for(const p of list){ if(getByPath(obj,p)!==undefined) return p; } return null; }
+
+  // map each label text to a JSON key and candidate paths we respect if already present
+  const FIELDS = [
+    { label:/^Global VAT Rate$/i, key:'global', cands:['vat.global','pricing.vat.global','vatRate'] },
+    { label:/^Room VAT$/i,       key:'room',   cands:['vat.room','pricing.vat.room'] },
+    { label:/^F&B VAT$/i,        key:'fnb',    cands:['vat.fnb','pricing.vat.fnb'] },
+    { label:/^AV VAT$/i,         key:'av',     cands:['vat.av','pricing.vat.av'] },
+    { label:/^Staff VAT$/i,      key:'staff',  cands:['vat.staff','pricing.vat.staff'] },
+  ];
+
+  onReady(() => {
+    const panel = findVatPanel();
+    if (!panel) return;
+
+    // get a handle on the working admin object (created by the earlier script),
+    // or fall back to any global admin/state object.
+    const g = window;
+    const working = g.__WORKING_ADMIN__ ||
+                    g.__ADMIN_STATE?.admin || g.admin ||
+                    g.state?.admin || g.__state?.admin ||
+                    g.__data || {};
+    g.__WORKING_ADMIN__ = working; // ensure it’s exposed for export
+
+    // helper to locate input by its label text
+    function findInputByLabel(re){
+      const lbls = Array.from(panel.querySelectorAll('label'));
+      const lbl = lbls.find(l => re.test((l.textContent||'').trim()));
+      if (!lbl) return null;
+      const id = lbl.getAttribute('for');
+      if (id) {
+        const byFor = panel.querySelector('#'+CSS.escape(id));
+        if (byFor && (byFor.tagName==='INPUT' || byFor.tagName==='TEXTAREA')) return byFor;
+      }
+      // fallback: next input in DOM
+      let el = lbl.nextElementSibling;
+      while (el && !(el.tagName==='INPUT' || el.tagName==='TEXTAREA')) el = el.nextElementSibling;
+      return el || null;
+    }
+
+    let anyBound = false;
+    FIELDS.forEach(f => {
+      const input = findInputByLabel(f.label);
+      if (!input) return;
+
+      // determine existing path (if any) and current value
+      const existingPath = firstExistingPath(working, f.cands);
+      const current = existingPath ? getByPath(working, existingPath) : getByPath(working, 'custom.vat.'+f.key);
+      input.removeAttribute('readonly');
+      input.value = (current ?? input.value ?? '').toString();
+
+      // ensure default 0% if empty, and save it
+      if (!input.value || input.value.trim()==='') {
+        input.value = '0';
+        if (existingPath) setByPath(working, existingPath, input.value);
+        else setByPath(working, 'custom.vat.'+f.key, input.value);
+      }
+
+      // live binding on change
+      input.addEventListener('input', () => {
+        const path = firstExistingPath(working, f.cands) || ('custom.vat.'+f.key);
+        setByPath(working, path, input.value);
+      });
+
+      anyBound = true;
+    });
+
+    if (anyBound) {
+      // friendly hint once
+      if (!g.__VAT_HINT_SHOWN__) {
+        const note = document.createElement('div');
+        note.textContent = 'VAT fields are live. Update to your local rates.';
+        note.style = 'margin:8px 0;padding:8px;border:1px solid #f0c36d;background:#fff8e1;font-size:14px;';
+        panel.prepend(note);
+        g.__VAT_HINT_SHOWN__ = true;
+      }
+    }
+  });
+})();
+</script>
   
 </body>
 </html>
