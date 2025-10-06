@@ -1068,5 +1068,35 @@ document.getElementById("coverageBtn")?.addEventListener("click", () => {
   });
 })();
 </script>
+<script>
+(() => {
+  function onReady(fn){ if (document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+  function findVatPanel(){
+    return Array.from(document.querySelectorAll('section,div,article'))
+      .find(el => /Pricing\s*·\s*VAT Defaults/i.test(el.textContent || ''));
+  }
+  onReady(() => {
+    const panel = findVatPanel();
+    if (!panel) return;
+    const inputs = panel.querySelectorAll('input');
+    let changed = false;
+    inputs.forEach((el) => {
+      if (!el.value || el.value.trim() === '') {
+        el.removeAttribute('readonly');
+        el.value = '0';              // fill default
+        el.dispatchEvent(new Event('input', { bubbles: true })); // <— ensure it’s saved
+        changed = true;
+      }
+    });
+    if (changed) {
+      const note = document.createElement('div');
+      note.textContent = 'Defaults set to 0%. Please update to your local VAT rates.';
+      note.style = 'margin:8px 0;padding:8px;border:1px solid #f0c36d;background:#fff8e1;font-size:14px;';
+      panel.prepend(note);
+    }
+  });
+})();
+</script>
+  
 </body>
 </html>
