@@ -1367,25 +1367,36 @@ function collectRooms(){
 
     const rooms = [];
     cards.forEach(card => {
-      // NAME
-      let name = '';
-      const nameInput = inputByLabel(card, /\bName\b/i) ||
-                        card.querySelector('input[placeholder*="Room Name" i], input[type="text"]');
-      if (nameInput) name = T(nameInput.value);
+    // NAME (robust: handles add-form input, in-card input, contenteditable, and label above ID)
+let name = '';
 
-      // FEATURES (buttons/pills with trailing ×; ignore the "Add another feature" button)
-      let features = [];
-      card.querySelectorAll('button, .pill, .tag, .badge, li').forEach(el => {
-        const raw = T(el.textContent);
-        if (!raw || /Add another feature/i.test(raw)) return;
-        const m = raw.match(/^(.+?)(?:\s*[x×]\s*)?$/);
-        const v = m && m[1] ? T(m[1]) : '';
-        if (v && !/Layout/i.test(v)) features.push(v);
-      });
-      // also capture any feature text inputs
-      card.querySelectorAll('input[placeholder*="feature" i]').forEach(el => {
-        const v = T(el.value); if (v) features.push(v);
-      });
+// 1) If the add-form "Room Name" input lives inside this card, use it
+const addFormName = card.querySelector('input[placeholder*="Room Name" i]');
+if (addFormName) name = (addFormName.value || '').trim();
+
+// 2) Otherwise, use the first text input in the card that isn't clearly a layout/feature input
+if (!name) {
+  const textInputs = Array.from(card.querySelectorAll('input[type="text"]'))
+    .filter(el => !/layout/i.test(el.placeholder || '') && !/feature/i.test(el.placeholder || ''));
+  if (textInputs[0]) name = (textInputs[0].value || '').trim();
+}
+
+// 3) Contenteditable title (if the card uses a non-input header)
+if (!name) {
+  const ce = card.querySelector('[contenteditable="true"]');
+  if (ce) name = (ce.textContent || '').trim();
+}
+
+// 4) Fallback: take the element just above the “ID: RM-” line (many cards show name there)
+if (!name) {
+  const idEl = Array.from(card.querySelectorAll('*')).find(el => /ID:\s*RM-/i.test(el.textContent || ''));
+  if (idEl) {
+    const prev = idEl.previousElementSibling;
+    if (prev && prev.tagName === 'INPUT') name = (prev.value || '').trim();
+    else if (prev) name = (prev.textContent || '').trim();
+  }
+}
+  
       features = Array.from(new Set(features));
 
       // LAYOUTS — accept badges like "Boardroom: 18" and row inputs (Layout + Capacity)
