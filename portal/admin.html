@@ -1313,6 +1313,45 @@ document.getElementById("coverageBtn")?.addEventListener("click", () => {
   });
 })();
 </script>
+<script>
+(() => {
+  // Adds a small Rooms Debug button to capture what the scraper should read
+  function onReady(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+  const findByText = (sel, re) => Array.from(document.querySelectorAll(sel)).find(el => re.test((el.textContent||'').trim()));
+  const roomsTab = () => findByText('section,div,article,main', /Rooms\s*&?\s*Details/i);
+
+  onReady(() => {
+    const tab = roomsTab();
+    if (!tab) return;
+    const btn = document.createElement('button');
+    btn.textContent = 'Rooms Debug';
+    btn.style = 'position:fixed;top:48px;right:16px;z-index:9999;padding:6px 10px;border-radius:8px;';
+    btn.addEventListener('click', () => {
+      // collect simple snapshot: text, inputs (name/placeholder/value), and any badges/pills
+      const inputs = Array.from(tab.querySelectorAll('input,select,textarea')).map(el => ({
+        tag: el.tagName.toLowerCase(),
+        type: el.getAttribute('type'),
+        id: el.id || '',
+        name: el.name || '',
+        placeholder: el.getAttribute('placeholder') || '',
+        value: el.value || ''
+      }));
+      const labels = Array.from(tab.querySelectorAll('label')).map(l => ({for:l.getAttribute('for')||'', text:(l.textContent||'').trim()}));
+      const pills  = Array.from(tab.querySelectorAll('.tag,.pill,button,.badge,li')).map(p => (p.textContent||'').trim()).filter(Boolean);
+      const text   = (tab.innerText||'').split('\n').map(t=>t.trim()).filter(Boolean).slice(0,400); // keep it short
+      const payload = { labels, inputs, pills, textSample: text };
+
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'rooms-debug.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+    document.body.appendChild(btn);
+  });
+})();
+</script>
   
 </body>
 </html>
