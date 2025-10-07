@@ -1288,14 +1288,121 @@ document.getElementById("coverageBtn")?.addEventListener("click", () => {
     return rooms;
   }
 
+ <script>
+(() => {
+  // Export JSON (safe) — v2 with stronger Rooms scraper (matches your screenshot)
+  function onReady(fn){ if (document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+  const T = s => (s||'').trim();
+  const num = v => { const n = parseFloat(String(v).replace(',','.')); return isFinite(n) ? n : undefined; };
+  const byText = (sel, re) => Array.from(document.querySelectorAll(sel)).find(el => re.test((el.textContent||'').trim()));
+  const roomsTab = () => byText('section,div,article,main', /Rooms\s*&?\s*Details/i);
+  const vatPanel = () => byText('section,div,article', /Pricing\s*·\s*VAT Defaults/i);
+
+  function inputByLabel(scope, re){
+    const lbl = Array.from(scope.querySelectorAll('label')).find(l => re.test((l.textContent||'').trim()));
+    if (!lbl) return null;
+    const id = lbl.getAttribute('for');
+    if (id) {
+      const byFor = scope.querySelector('#'+CSS.escape(id));
+      if (byFor && /^(INPUT|TEXTAREA|SELECT)$/.test(byFor.tagName)) return byFor;
+    }
+    let n = lbl.nextElementSibling;
+    while (n && !/^(INPUT|TEXTAREA|SELECT)$/.test(n.tagName)) n = n.nextElementSibling;
+    return n || null;
+  }
+
+  function collectVAT(){
+    const p = vatPanel();
+    const out = { global:'0', room:'0', fnb:'0', av:'0', staff:'0' };
+    if (!p) return out;
+    const map = [
+      {k:'global', re:/^Global VAT Rate$/i},
+      {k:'room',   re:/^Room VAT$/i},
+      {k:'fnb',    re:/^F&B VAT$/i},
+      {k:'av',     re:/^AV VAT$/i},
+      {k:'staff',  re:/^Staff VAT$/i},
+    ];
+    map.forEach(m => {
+      const el = inputByLabel(p, m.re);
+      if (el) out[m.k] = T(el.value||'0') || '0';
+    });
+    return out;
+  }
+
+  // Heuristics tuned to your UI (per your screenshot)
+  function collectRooms(){
+    const root = roomsTab();
+    if (!root) return [];
+
+    // Room "cards": contain "ID: RM-" OR have "Add another feature"
+    let cards = Array.from(root.querySelectorAll('section,article,div'))
+      .filter(el => /ID:\s*RM-/i.test(el.textContent||'') || /Add another feature/i.test(el.textContent||''));
+    if (!cards.length) cards = [root];
+
+    const rooms = [];
+    cards.forEach(card => {
+      // NAME
+      let name = '';
+      const nameInput = inputByLabel(card, /\bName\b/i) ||
+                        card.querySelector('input[placeholder*="Room Name" i], input[type="text"]');
+      if (nameInput) name = T(nameInput.value);
+
+      // FEATURES (buttons/pills with trailing ×; ignore the "Add another feature" button)
+      let features = [];
+      card.querySelectorAll('button, .pill, .tag, .badge, li').forEach(el => {
+        const raw = T(el.textContent);
+        if (!raw || /Add another feature/i.test(raw)) return;
+        const m = raw.match(/^(.+?)(?:\s*[x×]\s*)?$/);
+        const v = m && m[1] ? T(m[1]) : '';
+        if (v && !/Layout/i.test(v)) features.push(v);
+      });
+      // also capture any feature text inputs
+      card.querySelectorAll('input[placeholder*="feature" i]').forEach(el => {
+        const v = T(el.value); if (v) features.push(v);
+      });
+      features = Array.from(new Set(features));
+
+      // LAYOUTS — accept badges like "Boardroom: 18" and row inputs (Layout + Capacity)
+      const layouts = [];
+      // badges
+      card.querySelectorAll('button, .badge, .pill, li, span').forEach(el => {
+        const txt = T(el.textContent);
+        const m = txt.match(/^([A-Za-z][A-Za-z \-/&]+)\s*:\s*(\d+)$/);
+        if (m) layouts.push({ type: m[1], capacity: Number(m[2]) });
+      });
+      // rows with inputs
+      card.querySelectorAll('tr, .row, .layout, li, div').forEach(r => {
+        const typeEl = r.querySelector('select, [data-layout], .layout-type, .type, label, input[placeholder*="Layout" i]');
+        const capEl  = r.querySelector('input[type="number"], input[placeholder*="Capacity" i], .capacity, .cap');
+        let type = '';
+        if (typeEl) {
+          if (typeEl.tagName==='SELECT') type = T(typeEl.value || typeEl.options?.[typeEl.selectedIndex||0]?.text);
+          else if (typeEl.tagName==='INPUT') type = T(typeEl.value);
+          else type = T(typeEl.getAttribute('data-layout') || typeEl.textContent);
+        }
+        const capacity = capEl ? num(capEl.value ?? capEl.textContent) : undefined;
+        if (type && capacity !== undefined) layouts.push({ type, capacity });
+      });
+
+      if (name || features.length || layouts.length) {
+        rooms.push({ name, features, layouts });
+      }
+    });
+
+    return rooms;
+  }
+
   onReady(() => {
-    // add a new button near the top-right (safe exporter)
-    const bar = findBar();
-    if (!bar) return;
-    const btn = document.createElement('button');
-    btn.textContent = 'Export JSON (safe)';
-    btn.style = 'position:fixed;top:12px;right:16px;z-index:9999;padding:8px 12px;border-radius:8px;';
-    btn.addEventListener('click', () => {
+    // add/replace safe exporter button
+    let btn = Array.from(document.querySelectorAll('button'))
+      .find(b => (b.textContent||'').trim() === 'Export JSON (safe)');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.textContent = 'Export JSON (safe)';
+      btn.style = 'position:fixed;top:12px;right:16px;z-index:9999;padding:8px 12px;border-radius:8px;';
+      document.body.appendChild(btn);
+    }
+    btn.onclick = () => {
       const payload = {
         custom: {
           vat: collectVAT(),
@@ -1304,16 +1411,13 @@ document.getElementById("coverageBtn")?.addEventListener("click", () => {
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'admin-data.json';
-      a.click();
+      const a = document.createElement('a'); a.href = url; a.download = 'admin-data.json'; a.click();
       URL.revokeObjectURL(url);
-    });
-    document.body.appendChild(btn);
+    };
   });
 })();
 </script>
-<script>
+ 
 (() => {
   // Adds a small Rooms Debug button to capture what the scraper should read
   function onReady(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
