@@ -1577,3 +1577,77 @@ if (!name) {
   });
 })();
 </script>
+<script>
+(() => {
+  // --- CORE SHELL (seed): shared state + Import/Export + Unmapped ---
+  // 1) One shared in-memory object
+  window.ADMIN = window.ADMIN || { data: {}, mapped: new Set() };
+
+  // helpers
+  const onReady = (fn)=> document.readyState!=='loading' ? fn() : document.addEventListener('DOMContentLoaded', fn);
+  const flattenLeaves = (obj, base='') => {
+    const out = [];
+    if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+      for (const k of Object.keys(obj)) out.push(...flattenLeaves(obj[k], base ? base + '.' + k : k));
+    } else if (Array.isArray(obj)) {
+      obj.forEach((v,i)=> out.push(...flattenLeaves(v, base + '['+i+']')));
+    } else {
+      out.push(base);
+    }
+    return out;
+  };
+
+  // 2) Add Import/Export buttons (Core)
+  onReady(() => {
+    // toolbar container
+    const bar = document.createElement('div');
+    bar.style = 'position:fixed;top:12px;left:16px;z-index:9999;display:flex;gap:8px;flex-wrap:wrap';
+    // Import
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = '.json,application/json';
+    inp.style = 'display:none';
+    const btnImport = document.createElement('button');
+    btnImport.textContent = 'Import JSON (core)';
+    btnImport.onclick = ()=> inp.click();
+    inp.addEventListener('change', async () => {
+      const f = inp.files[0]; if (!f) return;
+      try {
+        const txt = await f.text();
+        const json = JSON.parse(txt);
+        window.ADMIN.data = json;
+        renderUnmapped(); // refresh panel after import
+        alert('Imported into ADMIN.data');
+      } catch (e) { alert('Import failed: ' + e.message); }
+    });
+    // Export
+    const btnExport = document.createElement('button');
+    btnExport.textContent = 'Export JSON (core)';
+    btnExport.onclick = () => {
+      const blob = new Blob([JSON.stringify(window.ADMIN.data, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'admin-data.json'; a.click();
+      URL.revokeObjectURL(url);
+    };
+    bar.appendChild(btnImport); bar.appendChild(inp); bar.appendChild(btnExport);
+    document.body.appendChild(bar);
+
+    // 3) Unmapped panel (shows any keys not mapped yet)
+    const panel = document.createElement('div');
+    panel.id = 'core-unmapped';
+    panel.style = 'position:fixed;right:16px;bottom:16px;max-width:420px;max-height:50vh;overflow:auto;padding:12px;border:1px solid #ddd;border-radius:10px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.08);font:14px/1.3 system-ui,Segoe UI,Roboto';
+    document.body.appendChild(panel);
+
+    window.renderUnmapped = function renderUnmapped(){
+      const data = window.ADMIN.data || {};
+      const mapped = window.ADMIN.mapped || new Set(); // we’ll fill this as we wire fields
+      const leaves = flattenLeaves(data);
+      const unmapped = leaves.filter(k => !mapped.has(k));
+      panel.innerHTML =
+        `<div style="font-weight:600;margin-bottom:6px">Unmapped (Core)</div>
+         <div style="margin-bottom:8px">Total keys: ${leaves.length} · Mapped: ${mapped.size} · Unmapped: ${unmapped.length}</div>
+         <div style="white-space:pre-wrap;font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:12px;border-top:1px solid #eee;padding-top:8px">${unmapped.slice(0,200).join('\n')}${unmapped.length>200?'\n…':''}</div>`;
+    };
+    renderUnmapped();
+  });
+})();
+</script>
