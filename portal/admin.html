@@ -1234,59 +1234,85 @@ document.getElementById("coverageBtn")?.addEventListener("click", () => {
     return out;
   }
 
-  function collectRooms(){
-    const root = roomsTab();
-    if (!root) return [];
-    const rooms = [];
-    const cards = Array.from(root.querySelectorAll('section,article,div'))
-      .filter(el => /name/i.test(el.textContent||'') && el.querySelector('input,textarea,select'));
-    const groups = cards.length ? cards : [root];
+function collectRooms(){
+  // Find the Rooms tab container by its visible title
+  const root = (function byText(sel, re){
+    return Array.from(document.querySelectorAll(sel))
+      .find(el => re.test((el.textContent||'').trim()));
+  })('section,div,article,main', /Rooms\s*&?\s*Details/i);
+  if (!root) return [];
 
-    groups.forEach(g => {
-      // name
-      let name = '';
-      const lbl = Array.from(g.querySelectorAll('label')).find(l => /name/i.test(l.textContent||''));
-      if (lbl) {
-        const id = lbl.getAttribute('for');
-        const byFor = id && g.querySelector('#'+CSS.escape(id));
-        if (byFor && byFor.tagName==='INPUT') name = T(byFor.value);
-      }
-      if (!name) {
-        const firstText = g.querySelector('input[type="text"]');
-        if (firstText) name = T(firstText.value);
-      }
-      // features
-      let features = [];
-      const fr = Array.from(g.querySelectorAll('*')).filter(el => /feature/i.test(el.textContent||''));
-      fr.forEach(r => {
-        const ins = r.closest('section,div,article')?.querySelectorAll?.('input[type="text"],.tag,.pill,li');
-        if (ins) ins.forEach(x => {
-          const v = x.tagName==='INPUT' ? T(x.value) : T(x.textContent);
-          if (v) features.push(v);
-        });
-      });
-      features = Array.from(new Set(features)).filter(Boolean);
-      // layouts
-      const layouts = [];
-      const rows = g.querySelectorAll('tr, .row, .layout, li');
-      rows.forEach(r => {
-        const typeEl = r.querySelector('select, [data-layout], .layout-type, .type, label');
-        const capEl  = r.querySelector('input[type="number"], .capacity, .cap');
-        let type = '';
-        if (typeEl) {
-          if (typeEl.tagName==='SELECT') {
-            type = T(typeEl.value || typeEl.options?.[typeEl.selectedIndex||0]?.text);
-          } else {
-            type = T(typeEl.getAttribute('data-layout') || typeEl.textContent);
-          }
-        }
-        const capacity = capEl ? num(capEl.value ?? capEl.textContent) : undefined;
-        if (type && capacity !== undefined) layouts.push({ type, capacity });
-      });
-      if (name || features.length || layouts.length) rooms.push({ name, features, layouts });
+  // Find visible Room Name inputs
+  const nameInputs = Array.from(
+    root.querySelectorAll('input[placeholder*="Room Name" i], input[name*="room" i], input[id*="room" i]')
+  ).filter(el => el.offsetParent !== null);
+
+  const rooms = [];
+
+  nameInputs.forEach(nameInput => {
+    // Walk up to the nearest card/section that looks like a room group
+    let card = nameInput.closest('section,article,div') || root;
+    const looksRoom = el => /ID:\s*RM-|Add another feature|Add layout/i.test(el.textContent||'');
+    let hops = 0;
+    while (card && !looksRoom(card) && hops < 5) { card = card.parentElement; hops++; }
+    if (!card) card = nameInput.closest('section,article,div') || root;
+
+    // NAME
+    const name = (nameInput.value || '').trim();
+
+    // FEATURES — only inside this card
+    let features = [];
+    const featureRegionBtn = Array.from(card.querySelectorAll('button'))
+      .find(b => /Add another feature/i.test((b.textContent||'')));
+    const featureRegion = featureRegionBtn ? featureRegionBtn.parentElement : card;
+
+    featureRegion.querySelectorAll('button, .pill, .tag, .badge, li').forEach(el => {
+      const raw = (el.textContent || '').trim();
+      if (!raw || /Add another feature|Add layout|Delete room/i.test(raw)) return;
+      const m = raw.match(/^(.+?)(?:\s*[x×]\s*)?$/);
+      const v = m && m[1] ? m[1].trim() : '';
+      if (v && !/Layout/i.test(v)) features.push(v);
     });
-    return rooms;
-  }
+    featureRegion.querySelectorAll('input[placeholder*="feature" i]').forEach(el => {
+      const v = (el.value || '').trim(); if (v) features.push(v);
+    });
+    features = Array.from(new Set(features));
+
+    // LAYOUTS — only inside this card
+    const layouts = [];
+    // badges like "Boardroom: 18"
+    card.querySelectorAll('button, .badge, .pill, li, span').forEach(el => {
+      const txt = (el.textContent || '').trim();
+      const m = txt.match(/^([A-Za-z][A-Za-z \-/&]+)\s*:\s*(\d+)$/);
+      if (m) layouts.push({ type: m[1], capacity: Number(m[2]) });
+    });
+    // paired inputs (Layout + Capacity)
+    card.querySelectorAll('tr, .row, .layout, li, div').forEach(r => {
+      const typeEl = r.querySelector('select, [data-layout], .layout-type, .type, label, input[placeholder*="Layout" i]');
+      const capEl  = r.querySelector('input[type="number"], input[placeholder*="Capacity" i], .capacity, .cap');
+      let type = '';
+      if (typeEl) {
+        if (typeEl.tagName === 'SELECT') {
+          type = (typeEl.value || typeEl.options?.[typeEl.selectedIndex||0]?.text || '').trim();
+        } else if (typeEl.tagName === 'INPUT') {
+          type = (typeEl.value || '').trim();
+        } else {
+          type = (typeEl.getAttribute('data-layout') || typeEl.textContent || '').trim();
+        }
+      }
+      const capRaw = capEl ? (capEl.value ?? capEl.textContent) : undefined;
+      const capacity = capRaw != null ? Number(String(capRaw).replace(',','.')) : undefined;
+      if (type && Number.isFinite(capacity)) layouts.push({ type, capacity });
+    });
+
+    if (name || features.length || layouts.length) {
+      rooms.push({ name, features, layouts });
+    }
+  });
+
+  return rooms;
+}
+
 
  <script>
 (() => {
