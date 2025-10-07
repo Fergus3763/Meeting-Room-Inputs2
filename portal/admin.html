@@ -1418,82 +1418,125 @@ document.getElementById("coverageBtn")?.addEventListener("click", () => {
 })();
 </script>
  
+
 (() => {
-  // Adds a small Rooms Debug button to capture what the scraper should read
-  function onReady(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
-  const findByText = (sel, re) => Array.from(document.querySelectorAll(sel)).find(el => re.test((el.textContent||'').trim()));
-  const roomsTab = () => findByText('section,div,article,main', /Rooms\s*&?\s*Details/i);
-
-  onReady(() => {
-    const tab = roomsTab();
-    if (!tab) return;
-    const btn = document.createElement('button');
-    btn.textContent = 'Rooms Debug';
-    btn.style = 'position:fixed;top:48px;right:16px;z-index:9999;padding:6px 10px;border-radius:8px;';
-    btn.addEventListener('click', () => {
-      // collect simple snapshot: text, inputs (name/placeholder/value), and any badges/pills
-      const inputs = Array.from(tab.querySelectorAll('input,select,textarea')).map(el => ({
-        tag: el.tagName.toLowerCase(),
-        type: el.getAttribute('type'),
-        id: el.id || '',
-        name: el.name || '',
-        placeholder: el.getAttribute('placeholder') || '',
-        value: el.value || ''
-      }));
-      const labels = Array.from(tab.querySelectorAll('label')).map(l => ({for:l.getAttribute('for')||'', text:(l.textContent||'').trim()}));
-      const pills  = Array.from(tab.querySelectorAll('.tag,.pill,button,.badge,li')).map(p => (p.textContent||'').trim()).filter(Boolean);
-      const text   = (tab.innerText||'').split('\n').map(t=>t.trim()).filter(Boolean).slice(0,400); // keep it short
-      const payload = { labels, inputs, pills, textSample: text };
-
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = 'rooms-debug.json';
-      a.click();
-      URL.revokeObjectURL(url);
-    });
-    document.body.appendChild(btn);
-  });
-})();
-</script>
-<script>
-(() => {
-  // Rooms Debug v2: always shows button; finds Rooms tab when clicked
-  function onReady(fn){ if(document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
-  const T = s => (s||'').trim();
-  const findByText = (sel, re) => Array.from(document.querySelectorAll(sel)).find(el => re.test((el.textContent||'').trim()));
-  const roomsTab = () => findByText('section,div,article,main', /Rooms\s*&?\s*Details/i);
-
-  onReady(() => {
-    const btn = document.createElement('button');
-    btn.textContent = 'Rooms Debug';
-    btn.style = 'position:fixed;top:48px;right:16px;z-index:9999;padding:6px 10px;border-radius:8px;';
-    btn.addEventListener('click', () => {
-      const tab = roomsTab();
-      if (!tab) { alert('Open the “Rooms & Details” tab first, then click Rooms Debug again.'); return; }
-
-      const inputs = Array.from(tab.querySelectorAll('input,select,textarea')).map(el => ({
-        tag: el.tagName.toLowerCase(),
-        type: el.getAttribute('type') || '',
-        id: el.id || '',
-        name: el.name || '',
-        placeholder: el.getAttribute('placeholder') || '',
-        value: el.value || ''
-      }));
-      const labels = Array.from(tab.querySelectorAll('label')).map(l => ({for:l.getAttribute('for')||'', text:(l.textContent||'').trim()}));
-      const pills  = Array.from(tab.querySelectorAll('.tag,.pill,.badge,button,li')).map(p => (p.textContent||'').trim()).filter(Boolean);
-      const text   = (tab.innerText||'').split('\n').map(T).filter(Boolean).slice(0,400);
-
-      const payload = { labels, inputs, pills, textSample: text };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = 'rooms-debug.json'; a.click();
-      URL.revokeObjectURL(url);
-    });
-    document.body.appendChild(btn);
-  });
-})();
+  
 </script>
   
 </body>
 </html>
+<script>
+(() => {
+  // Export JSON (safe) — clean version
+  function onReady(fn){ if (document.readyState!=='loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
+  const T = s => (s||'').trim();
+  const num = v => { const n = parseFloat(String(v).replace(',','.')); return isFinite(n) ? n : undefined; };
+  const byText = (sel, re) => Array.from(document.querySelectorAll(sel)).find(el => re.test((el.textContent||'').trim()));
+  const tabRooms = () => byText('section,div,article,main', /Rooms\s*&?\s*Details/i);
+  const panelVAT = () => byText('section,div,article', /Pricing\s*·\s*VAT Defaults/i);
+
+  function inputByLabel(scope, re){
+    const lbl = Array.from(scope.querySelectorAll('label')).find(l => re.test((l.textContent||'').trim()));
+    if (!lbl) return null;
+    const id = lbl.getAttribute('for');
+    if (id) {
+      const byFor = scope.querySelector('#'+CSS.escape(id));
+      if (byFor && /^(INPUT|TEXTAREA|SELECT)$/.test(byFor.tagName)) return byFor;
+    }
+    let n = lbl.nextElementSibling;
+    while (n && !/^(INPUT|TEXTAREA|SELECT)$/.test(n.tagName)) n = n.nextElementSibling;
+    return n || null;
+  }
+
+  function collectVAT(){
+    const p = panelVAT();
+    const out = { global:'0', room:'0', fnb:'0', av:'0', staff:'0' };
+    if (!p) return out;
+    [
+      {k:'global', re:/^Global VAT Rate$/i},
+      {k:'room',   re:/^Room VAT$/i},
+      {k:'fnb',    re:/^F&B VAT$/i},
+      {k:'av',     re:/^AV VAT$/i},
+      {k:'staff',  re:/^Staff VAT$/i},
+    ].forEach(m => {
+      const el = inputByLabel(p, m.re);
+      if (el) out[m.k] = T(el.value||'0') || '0';
+    });
+    return out;
+  }
+
+  function collectRooms(){
+    const root = tabRooms();
+    if (!root) return [];
+    // Room cards heuristic: contains "ID: RM-" OR has "Add another feature"
+    let cards = Array.from(root.querySelectorAll('section,article,div'))
+      .filter(el => /ID:\s*RM-/i.test(el.textContent||'') || /Add another feature/i.test(el.textContent||''));
+    if (!cards.length) cards = [root];
+
+    const rooms = [];
+    cards.forEach(card => {
+      // name
+      let name = '';
+      const nameInput = inputByLabel(card, /\bName\b/i) ||
+                        card.querySelector('input[placeholder*="Room Name" i], input[type="text"]');
+      if (nameInput) name = T(nameInput.value);
+
+      // features (pills/buttons, ignore “Add another feature”)
+      let features = [];
+      card.querySelectorAll('button, .pill, .tag, .badge, li').forEach(el => {
+        const raw = T(el.textContent);
+        if (!raw || /Add another feature/i.test(raw)) return;
+        const m = raw.match(/^(.+?)(?:\s*[x×]\s*)?$/);
+        const v = m && m[1] ? T(m[1]) : '';
+        if (v && !/Layout/i.test(v)) features.push(v);
+      });
+      // pending text input for feature
+      card.querySelectorAll('input[placeholder*="feature" i]').forEach(el => {
+        const v = T(el.value); if (v) features.push(v);
+      });
+      features = Array.from(new Set(features));
+
+      // layouts (badges like "Boardroom: 18" or rows with layout+capacity)
+      const layouts = [];
+      card.querySelectorAll('button, .badge, .pill, li, span').forEach(el => {
+        const txt = T(el.textContent);
+        const m = txt.match(/^([A-Za-z][A-Za-z \-/&]+)\s*:\s*(\d+)$/);
+        if (m) layouts.push({ type: m[1], capacity: Number(m[2]) });
+      });
+      card.querySelectorAll('tr, .row, .layout, li, div').forEach(r => {
+        const typeEl = r.querySelector('select, [data-layout], .layout-type, .type, label, input[placeholder*="Layout" i]');
+        const capEl  = r.querySelector('input[type="number"], input[placeholder*="Capacity" i], .capacity, .cap');
+        let type = '';
+        if (typeEl) {
+          if (typeEl.tagName==='SELECT') type = T(typeEl.value || typeEl.options?.[typeEl.selectedIndex||0]?.text);
+          else if (typeEl.tagName==='INPUT') type = T(typeEl.value);
+          else type = T(typeEl.getAttribute('data-layout') || typeEl.textContent);
+        }
+        const capacity = capEl ? Number((capEl.value ?? capEl.textContent).toString().replace(',','.')) : undefined;
+        if (type && Number.isFinite(capacity)) layouts.push({ type, capacity });
+      });
+
+      if (name || features.length || layouts.length) rooms.push({ name, features, layouts });
+    });
+    return rooms;
+  }
+
+  onReady(() => {
+    let btn = Array.from(document.querySelectorAll('button'))
+      .find(b => (b.textContent||'').trim() === 'Export JSON (safe)');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.textContent = 'Export JSON (safe)';
+      btn.style = 'position:fixed;top:12px;right:16px;z-index:9999;padding:8px 12px;border-radius:8px;';
+      document.body.appendChild(btn);
+    }
+    btn.onclick = () => {
+      const payload = { custom: { vat: collectVAT(), rooms: collectRooms() } };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'admin-data.json'; a.click();
+      URL.revokeObjectURL(url);
+    };
+  });
+})();
+</script>
