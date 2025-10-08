@@ -1672,5 +1672,19 @@ if (!name) {
       panel.style.transform = `translate(${dx}px, ${dy}px)`;
     };
   });
+  <script>
+(() => {
+  const onReady=(fn)=>document.readyState!=='loading'?fn():document.addEventListener('DOMContentLoaded',fn);
+  onReady(()=> {
+    window.ADMIN = window.ADMIN || { data:{}, mapped:new Set() };
+    const paths = [
+      'custom.vat.global','custom.vat.room','custom.vat.fnb','custom.vat.av','custom.vat.staff'
+    ];
+    paths.forEach(p => window.ADMIN.mapped.add(p));
+    if (typeof window.renderUnmapped==='function') window.renderUnmapped();
+  });
+})();
+</script>
+
 })();
 </script>
