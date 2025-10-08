@@ -1688,3 +1688,48 @@ if (!name) {
 
 })();
 </script>
+<script>
+(() => {
+  // Override: smarter Unmapped (Core) that counts VAT as mapped
+  window.renderUnmapped = function renderUnmapped(){
+    const data = window.ADMIN?.data || {};
+    // start with recorded mapped set (if any)
+    const mapped = new Set(window.ADMIN?.mapped || []);
+
+    // treat VAT fields as mapped when present
+    const vat = data?.custom?.vat || {};
+    ['global','room','fnb','av','staff'].forEach(k => {
+      if (vat[k] !== undefined) mapped.add(`custom.vat.${k}`);
+    });
+
+    // flatten leaves
+    function leaves(o, base=''){
+      const out = [];
+      if (Array.isArray(o)) {
+        o.forEach((v,i)=> out.push(...leaves(v, `${base}[${i}]`)));
+      } else if (o && typeof o === 'object') {
+        for (const k of Object.keys(o)) out.push(...leaves(o[k], base ? `${base}.${k}` : k));
+      } else {
+        out.push(base);
+      }
+      return out;
+    }
+
+    const all = leaves(data);
+    const un = all.filter(k => !mapped.has(k));
+
+    const panel = document.getElementById('core-unmapped');
+    if (!panel) return;
+    panel.innerHTML =
+      `<div style="font-weight:700;margin-bottom:6px">Unmapped (Core)</div>
+       <div style="margin-bottom:8px">Total keys: ${all.length} · Mapped: ${mapped.size} · Unmapped: ${un.length}</div>
+       <div style="white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:12px;border-top:1px solid #eee;padding-top:8px">${un.slice(0,200).join('\n')}${un.length>200?'\n…':''}</div>`;
+
+    // persist updated set
+    window.ADMIN.mapped = mapped;
+  };
+
+  // re-render now if data exists
+  if (typeof window.renderUnmapped === 'function') window.renderUnmapped();
+})();
+</script>
