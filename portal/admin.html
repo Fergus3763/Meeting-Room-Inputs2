@@ -1823,4 +1823,28 @@ if (!name) {
         const idx = window.ADMIN.data.custom.rooms.length - 1;
         ['name','features[0]','layouts[0].type','layouts[0].capacity'].forEach(s => window.ADMIN.mapped.add(`custom.rooms[${idx}].${s}`));
         // reset
-        nameEl.value=''; P.features=[]; P.layouts=[]; rend
+        nameEl.value=''; P.features=[]; P.layouts=[]; renderPending(); renderList();
+        if (window.renderUnmapped) renderUnmapped();
+        alert('Room saved to ADMIN.data.custom.rooms');
+      };
+      modal.querySelector('#mini-r-close').onclick = ()=> modal.remove();
+
+      renderPending(); renderList();
+    } else {
+      document.body.appendChild(modal);
+    }
+  }
+
+  onReady(()=>{
+    // Floating button
+    if (document.getElementById('mini-rooms-launch')) return;
+    const btn = document.createElement('button');
+    btn.id = 'mini-rooms-launch';
+    btn.textContent = 'Open Mini Rooms';
+    btn.style = 'position:fixed;bottom:16px;left:16px;z-index:99998;padding:10px 12px;border-radius:10px;font-weight:600';
+    btn.onclick = openPopup;
+    document.body.appendChild(btn);
+  });
+})();
+</script>
+
