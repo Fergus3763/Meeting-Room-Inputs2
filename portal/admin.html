@@ -1910,3 +1910,34 @@ if (!name) {
 })();
 </script>
 
+<script>
+(() => {
+  // Mini Rooms: validation guard (must have name; warn if no features/layouts)
+  document.addEventListener('click', (e) => {
+    const save = e.target.closest('#mr-save');
+    if (!save) return;
+
+    const modal = document.getElementById('mini-rooms-modal');
+    if (!modal) return;
+    const nameEl = modal.querySelector('#mr-name');
+    const pending = modal.querySelector('#mr-pending')?.textContent || '';
+
+    const name = (nameEl?.value || '').trim();
+    if (!name) {
+      e.preventDefault(); e.stopPropagation();
+      alert('Please enter a Room name before saving.'); 
+      return;
+    }
+    // gentle nudge if truly empty payload
+    const hasFeature = /Pending features:\s*(?!—)\S/.test(pending);
+    const hasLayout  = /Pending layouts:\s*(?!—)\S/.test(pending);
+    if (!hasFeature && !hasLayout) {
+      // allow, but confirm
+      if (!confirm('No features or layouts added yet. Save room anyway?')) {
+        e.preventDefault(); e.stopPropagation();
+        return;
+      }
+    }
+  }, true);
+})();
+</script>
