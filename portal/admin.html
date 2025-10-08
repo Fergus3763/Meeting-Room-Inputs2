@@ -1733,3 +1733,94 @@ if (!name) {
   if (typeof window.renderUnmapped === 'function') window.renderUnmapped();
 })();
 </script>
+<script>
+(() => {
+  // Floating "Mini Rooms" popup — guaranteed visible, no scraping.
+  const onReady = (fn)=> document.readyState!=='loading' ? fn() : document.addEventListener('DOMContentLoaded', fn);
+  const T = s => (s||'').trim();
+  const N = v => { const n = parseFloat(String(v).replace(',','.')); return Number.isFinite(n) ? n : undefined; };
+
+  function ensureState(){
+    window.ADMIN = window.ADMIN || { data:{}, mapped:new Set() };
+    const d = window.ADMIN.data;
+    if (!d.custom) d.custom = {};
+    if (!Array.isArray(d.custom.rooms)) d.custom.rooms = [];
+  }
+
+  function openPopup(){
+    ensureState();
+
+    // If modal exists, just show it
+    let modal = document.getElementById('mini-rooms-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'mini-rooms-modal';
+      modal.style = 'position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45);z-index:99999';
+      modal.innerHTML = `
+        <div style="width:min(720px,92vw);background:#0f1220;color:#eef1f6;border:1px solid rgba(255,255,255,.15);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.45);">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.1)">
+            <div style="font-weight:700">Rooms & Details • Mini</div>
+            <button id="mini-r-close" style="padding:6px 10px;border-radius:8px">Close</button>
+          </div>
+          <div style="padding:12px 16px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+              <input id="mr-name" placeholder="Room name" style="padding:8px;border-radius:8px;min-width:220px">
+              <input id="mr-feature" placeholder="Feature (e.g., Lake View)" style="padding:8px;border-radius:8px;min-width:220px">
+              <button id="mr-addf" style="padding:8px 10px;border-radius:8px">Add feature</button>
+              <input id="mr-ltype" placeholder="Layout (e.g., Boardroom)" style="padding:8px;border-radius:8px;min-width:200px">
+              <input id="mr-lcap" type="number" placeholder="Capacity" style="padding:8px;border-radius:8px;width:120px">
+              <button id="mr-addl" style="padding:8px 10px;border-radius:8px">Add layout</button>
+              <button id="mr-save" style="padding:8px 12px;border-radius:8px;font-weight:600">Save room</button>
+            </div>
+            <div id="mr-pending" style="font-size:13px;opacity:.9;margin-bottom:10px"></div>
+            <div id="mr-list"></div>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+
+      // wire up
+      const P = { features:[], layouts:[] };
+      const nameEl = modal.querySelector('#mr-name');
+      const featEl = modal.querySelector('#mr-feature');
+      const addF   = modal.querySelector('#mr-addf');
+      const ltEl   = modal.querySelector('#mr-ltype');
+      const lcEl   = modal.querySelector('#mr-lcap');
+      const addL   = modal.querySelector('#mr-addl');
+      const save   = modal.querySelector('#mr-save');
+      const pend   = modal.querySelector('#mr-pending');
+      const list   = modal.querySelector('#mr-list');
+
+      function renderPending(){
+        const feats = P.features.join(', ') || '—';
+        const lays  = P.layouts.map(l=>`${l.type}: ${l.capacity}`).join(' • ') || '—';
+        pend.innerHTML = `<div>Pending features: ${feats}</div><div>Pending layouts: ${lays}</div>`;
+      }
+      function renderList(){
+        ensureState();
+        const rooms = window.ADMIN.data.custom.rooms;
+        if (!rooms.length){ list.innerHTML = `<div style="opacity:.7">No rooms saved yet.</div>`; return; }
+        list.innerHTML = rooms.map((r,i)=>`
+          <div style="padding:10px;border:1px solid rgba(255,255,255,.15);border-radius:10px;margin-bottom:8px">
+            <div><b>${r.name||'(no name)'}</b></div>
+            <div style="font-size:13px;opacity:.9">Features: ${r.features?.join(', ')||'—'}</div>
+            <div style="font-size:13px;opacity:.9">Layouts: ${(r.layouts||[]).map(l=>`${l.type}: ${l.capacity}`).join(' • ')||'—'}</div>
+            <div style="margin-top:6px"><button data-del="${i}" style="padding:6px 10px;border-radius:8px">Delete</button></div>
+          </div>
+        `).join('');
+        list.querySelectorAll('button[data-del]').forEach(b=>{
+          b.onclick = () => { window.ADMIN.data.custom.rooms.splice(parseInt(b.getAttribute('data-del'),10),1); renderList(); if(window.renderUnmapped) renderUnmapped(); };
+        });
+      }
+      addF.onclick = ()=>{ const v=T(featEl.value); if(v) P.features.push(v); featEl.value=''; renderPending(); };
+      addL.onclick = ()=>{ const t=T(ltEl.value); const c=N(lcEl.value); if(t && c!==undefined) P.layouts.push({type:t,capacity:c}); ltEl.value=''; lcEl.value=''; renderPending(); };
+      save.onclick = ()=>{
+        ensureState();
+        const name = T(nameEl.value);
+        const features = [...new Set(P.features)];
+        const layouts = P.layouts.slice();
+        window.ADMIN.data.custom.rooms.push({ name, features, layouts });
+        // mark some paths mapped for coverage
+        const idx = window.ADMIN.data.custom.rooms.length - 1;
+        ['name','features[0]','layouts[0].type','layouts[0].capacity'].forEach(s => window.ADMIN.mapped.add(`custom.rooms[${idx}].${s}`));
+        // reset
+        nameEl.value=''; P.features=[]; P.layouts=[]; rend
