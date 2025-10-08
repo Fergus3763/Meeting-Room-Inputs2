@@ -1651,3 +1651,26 @@ if (!name) {
   });
 })();
 </script>
+<script>
+(() => {
+  // Style + UX boost for Unmapped (Core)
+  const onReady=(fn)=>document.readyState!=='loading'?fn():document.addEventListener('DOMContentLoaded',fn);
+  onReady(()=> {
+    const panel=document.getElementById('core-unmapped');
+    if(!panel) return;
+    panel.style.cssText += ';right:16px;bottom:16px;max-width:520px;max-height:60vh;padding:14px 16px;border:1px solid rgba(255,255,255,.25);border-radius:12px;background:rgba(20,22,28,.92);color:#eef1f6;backdrop-filter:blur(4px);box-shadow:0 6px 18px rgba(0,0,0,.35);';
+    panel.innerHTML = `<div id="core-unmapped-title" style="cursor:move;font-weight:700;margin-bottom:8px;letter-spacing:.2px">Unmapped (Core)</div>` + panel.innerHTML.split('</div>')[1];
+
+    // drag to move
+    const title=document.getElementById('core-unmapped-title');
+    let dx=0,dy=0,drag=false,px=0,py=0;
+    title.onmousedown=(e)=>{drag=true;px=e.clientX;py=e.clientY;document.body.style.userSelect='none';};
+    document.onmouseup=()=>{drag=false;document.body.style.userSelect='';};
+    document.onmousemove=(e)=>{
+      if(!drag) return;
+      dx += e.clientX-px; dy += e.clientY-py; px=e.clientX; py=e.clientY;
+      panel.style.transform = `translate(${dx}px, ${dy}px)`;
+    };
+  });
+})();
+</script>
